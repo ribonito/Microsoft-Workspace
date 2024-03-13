@@ -53,7 +53,7 @@ Example 2
 
 
 Mailbox Size Report
-----------------------------
+-------------------------------
 
 1.Display in Exchange Management Shell
 
