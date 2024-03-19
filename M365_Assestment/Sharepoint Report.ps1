@@ -1,5 +1,5 @@
 #Config Parameters
-$AdminSiteURL="https://parexusa-admin.sharepoint.com/"
+$AdminSiteURL="https://hawlech-admin.sharepoint.com/"
 $ReportOutput="C:\Temp\SPOStorage.csv"
   
 #Connect to SharePoint Online Admin Center
