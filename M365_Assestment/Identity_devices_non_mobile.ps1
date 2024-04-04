@@ -148,6 +148,9 @@ Foreach($Device in $DeviceInfo){
     $DeviceUsers = Get-MgBetaDeviceRegisteredUser -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
     $DeviceMemberOf = Get-MgBetaDeviceMemberOf -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
     $Groups = $DeviceMemberOf|Where-Object {$_.'@odata.type' -eq '#microsoft.graph.group'}
+    $DeviceM = Invoke-MgGraphRequest -Uri "https://graph.microsoft.com/beta/devices/$($Device.Id)"
+    $dModel = $DeviceM.model
+    $dManufacturer = $DeviceM.manufacturer
     $AdministrativeUnits = $DeviceMemberOf|Where-Object{$_.'@odata.type' -eq '#microsoft.graph.administrativeUnit'}
     if($Device.TrustType -eq "Workplace")
     {
@@ -196,6 +199,8 @@ Foreach($Device in $DeviceInfo){
                     'Administrative Units'   =(@($AdministrativeUnits.displayName) -join ',')
                     'Device Id'              =$Device.DeviceId
                     'Object Id'              =$Device.Id
+                    'Manufacturer'           =$dManufacturer
+                    'Model'                  =$dModel
                     'BitLocker Encrypted'    =$BitLockerKeyIsPresent
                     'Extension Attributes'   =(@($AttributeArray)| Out-String).Trim()
                     }
@@ -206,11 +211,11 @@ Foreach($Device in $DeviceInfo){
     $Report = [PSCustomObject]$ExportResult
     if($Certificate -eq $null)
     {
-        $Report|Select 'Name','Enabled','Operating System','OS Version','Join Type','Owners','Users','Is Managed','Management Type','Is Compliant','Registration Date Time','Last SignIn Date Time','InActive Days','Groups','Administrative Units','Device Id','Object Id','BitLocker Encrypted','Extension Attributes' | Export-csv -path $OutputCsv -NoType -Append  
+        $Report|Select 'Name','Enabled','Operating System','OS Version','Join Type','Owners','Users','Is Managed','Management Type','Is Compliant','Registration Date Time','Last SignIn Date Time','InActive Days','Groups','Administrative Units','Device Id','Object Id','Manufacturer','Model','BitLocker Encrypted','Extension Attributes' | Export-csv -path $OutputCsv -NoType -Append  
     }
     else
     {
-        $Report|Select 'Name','Enabled','Operating System','OS Version','Join Type','Owners','Users','Is Managed','Management Type','Is Compliant','Registration Date Time','Last SignIn Date Time','InActive Days','Groups','Administrative Units','Device Id','Object Id','Extension Attributes' | Export-csv -path $OutputCsv -NoType -Append          
+        $Report|Select 'Name','Enabled','Operating System','OS Version','Join Type','Owners','Users','Is Managed','Management Type','Is Compliant','Registration Date Time','Last SignIn Date Time','InActive Days','Groups','Administrative Units','Device Id','Object Id','Manufacturer','Model','Extension Attributes' | Export-csv -path $OutputCsv -NoType -Append          
     }
 }
 if((Test-Path -Path $OutputCsv) -eq "True") 
