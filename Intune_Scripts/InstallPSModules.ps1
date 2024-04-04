@@ -9,4 +9,5 @@ Install-Module -name Microsoft.Graph -Force
 Install-Module -name Microsoft.Graph.beta -Force
 Install-Module -Name MSGraphFunctions -Force
 Install-Module -Name IntuneBackupAndRestore -Force
+Install-Module -Name WindowsAutopilotPartnerCenter –force
 
