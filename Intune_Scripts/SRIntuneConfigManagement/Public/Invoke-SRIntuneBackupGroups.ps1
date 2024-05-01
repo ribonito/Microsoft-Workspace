@@ -63,4 +63,4 @@
     $GroupIDs.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\$Subfolder\GroupIDs.csv" -NoTypeInformation
 }
 
-#Invoke-SRIntuneBackupGroups -Path "C:\temp\IntuneBackup\FunctionTest" 
+#Invoke-SRIntuneBackupGroups -Path "C:\temp\IntuneBackup\FunctionTest" -Prefix "SRMW"

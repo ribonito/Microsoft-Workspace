@@ -33,16 +33,58 @@ function Invoke-SRIntuneBackupAppProtectionPolicy {
     $appProtectionPolicies = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
 
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
-        $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $appProtectionPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
+        # If Android
+        if ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection') {
+            $Uri = "$ApiVersion/deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')/?`$expand=apps"
+            $appProtectionPolicywApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+        }
+        # Elseif iOS
+        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection') {
+            $Uri = "$ApiVersion/deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')/?`$expand=apps"
+            $appProtectionPolicywApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+        }
+        # Elseif Windows 10 with enrollment
+        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.mdmWindowsInformationProtectionPolicy') {
+            $appProtectionPolicywApps = $appProtectionPolicy
+        }
+        # Elseif Windows 10 without Enrollment
+        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.windowsInformationProtectionPolicy') {
+            $Uri = "$ApiVersion/deviceAppManagement/mdmWindowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/?`$expand=protectedAppLockerFiles,exemptAppLockerFiles"
+            $appProtectionPolicywApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+        }
+        # Elseif targeted managed app configuration
+        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.targetedManagedAppConfiguration') {
+            $Uri = "$ApiVersion/deviceAppManagement/targetedManagedAppConfigurations('$($appProtectionPolicy.id)')/?`$expand=apps"
+            $appProtectionPolicywApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+        }
+
+        $fileName = ($appProtectionPolicywApps.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $appProtectionPolicywApps.'@odata.type' = $appProtectionPolicy.'@odata.type'
+        $appProtectionPolicywApps | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
 
         [PSCustomObject]@{
             "Action" = "Backup"
             "Type"   = "App Protection Policy"
-            "Name"   = $appProtectionPolicy.displayName
+            "Name"   = $appProtectionPolicywApps.displayName
+            "Path"   = "App Protection Policies\$fileName.json"
+        }
+    }
+
+    # Get all app configuration policies for managed devices
+    $Uri = "$ApiVersion/deviceAppManagement/mobileAppConfigurations"
+    $appConfigPolicies = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+
+    foreach ($appConfigPolicy in $appConfigPolicies) {
+        $fileName = ($appConfigPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $appConfigPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "App Configuration Policy"
+            "Name"   = $appConfigPolicy.displayName
             "Path"   = "App Protection Policies\$fileName.json"
         }
     }
 }
 
-#Invoke-SRIntuneBackupAppProtectionPolicy -Path "C:\temp\IntuneBackup\FunctionTest"
+#Invoke-SRIntuneBackupAppProtectionPolicy -Path "C:\temp\IntuneRestore"

@@ -24,7 +24,7 @@
     )
 
     # Create folder if not exists
-    $Subfolder = "Windows Quality Update\Assignments"
+    $Subfolder = "Windows Quality Update Profiles\Assignments"
     if (-not (Test-Path "$Path\$Subfolder")) {
         $null = New-Item -Path "$Path\$Subfolder" -ItemType Directory
     }

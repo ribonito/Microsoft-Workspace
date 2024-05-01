@@ -23,6 +23,7 @@ function Invoke-SRIntuneBackupScopeTag {
         [string]$ApiVersion = "Beta"
     )
 
+    $ScopeTags = @{}
     # Create folder if not exists
     $Subfolder = "Scope tags"
     if (-not (Test-Path "$Path\$Subfolder")) {
@@ -38,6 +39,9 @@ function Invoke-SRIntuneBackupScopeTag {
             $fileName = ($Profile.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
             $Profile | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($fileName).json"
 
+            #Store group name and id in a hash table
+            $ScopeTags.Add($Profile.id, $Profile.displayName)
+
             [PSCustomObject]@{
                 "Action" = "Backup"
                 "Type"   = "Backup Scope Tags"
@@ -46,6 +50,8 @@ function Invoke-SRIntuneBackupScopeTag {
             }
         }
     }
+    #Store group hash table in a CSV file
+    $ScopeTags.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\$Subfolder\ScopeTags.csv" -NoTypeInformation
 }
 
 #Invoke-SRIntuneBackupScopeTag -Path "C:\temp\IntuneBackup\FunctionTest"
