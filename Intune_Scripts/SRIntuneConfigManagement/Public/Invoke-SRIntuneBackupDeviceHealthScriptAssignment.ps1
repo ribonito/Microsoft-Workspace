@@ -37,7 +37,7 @@
 
         if ($assignments) {
             $fileName = ($healthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Health Scripts\Assignments\$fileName.json"
+            $assignments | ConvertTo-Json -Depth 10 | Out-File -LiteralPath "$path\Device Health Scripts\Assignments\$fileName.json"
 
             [PSCustomObject]@{
                 "Action" = "Backup"
@@ -49,4 +49,4 @@
     }
 }
 
-Invoke-SRIntuneBackupDeviceHealthScriptAssignment -Path "C:\temp\IntuneBackup\FunctionTest"
+#Invoke-SRIntuneBackupDeviceHealthScriptAssignment -Path "C:\temp\IntuneBackup\FunctionTest"

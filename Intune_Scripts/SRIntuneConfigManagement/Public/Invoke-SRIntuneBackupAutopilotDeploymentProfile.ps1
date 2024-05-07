@@ -48,4 +48,4 @@
     }
 }
 
-#Invoke-SRIntuneBackupAutopilotDeploymentProfile -Path "C:\temp\IntuneBackup\FunctionTest"
+#Invoke-SRIntuneBackupAutopilotDeploymentProfile -Path "C:\temp\Intunerestore"

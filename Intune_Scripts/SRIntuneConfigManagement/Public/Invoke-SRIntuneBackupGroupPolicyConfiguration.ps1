@@ -33,9 +33,12 @@ function Invoke-SRIntuneBackupGroupPolicyConfiguration {
     $groupPolicyConfigurations = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-    $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues"
+        $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues"
         $groupPolicyDefinitionValues = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
-        $groupPolicyBackupValues = @()
+        $groupPolicyBackupValues = @{
+            "Policy" = $groupPolicyConfiguration
+            "Definitions" = @()
+        }
 
         foreach ($groupPolicyDefinitionValue in $groupPolicyDefinitionValues) {
             $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
@@ -44,37 +47,31 @@ function Invoke-SRIntuneBackupGroupPolicyConfiguration {
             $groupPolicyPresentationValues = Invoke-MgGraphRequest -Uri $Uri | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
             $groupPolicyBackupValue = @{
                 "enabled" = $groupPolicyDefinitionValue.enabled
-                "definition@odata.bind" = "https://graph.microsoft.com/$ApiVersion//deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')"
+                "definition@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')"
             }
 
-            if ($groupPolicyPresentationValues.value) {
-                $groupPolicyBackupValue."presentationValues" = @()
-                foreach ($groupPolicyPresentationValue in $groupPolicyPresentationValues) {
+            foreach ($groupPolicyPresentationValue in $groupPolicyPresentationValues.Values) {
+                if($groupPolicyPresentationValue -and $groupPolicyPresentationValue -notmatch "https://graph.microsoft.com"){
+                    
+                    $groupPolicyBackupValue."presentationValues" = @()
+                    if ($groupPolicyPresentationValue.value) {
                     $groupPolicyBackupValue."presentationValues" +=
                         @{
-                            "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
                             "value" = $groupPolicyPresentationValue.value
-                            "presentation@odata.bind" = "https://graph.microsoft.com/$ApiVersion//deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
+                            "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
+                            "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
                         }
-                }
-            } elseif ($groupPolicyPresentationValues.values) {
-                $groupPolicyBackupValue."presentationValues" = @(
-                    @{
-                        "@odata.type" = $groupPolicyPresentationValues.'@odata.type'
-                        "values" = @(
-                            foreach ($groupPolicyPresentationValue in $groupPolicyPresentationValues.values) {
-                                @{
-                                    "name" = $groupPolicyPresentationValue.name
-                                    "value" = $groupPolicyPresentationValue.value
-                                }
-                            }
-                        )
-                        "presentation@odata.bind" = "https://graph.microsoft.com/$ApiVersion//deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValues.presentation.id)')"
+                    } elseif ($groupPolicyPresentationValue.values){
+                    $groupPolicyBackupValue."presentationValues" +=
+                        @{
+                            "values" = $groupPolicyPresentationValue.values
+                            "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
+                            "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
+                        }
                     }
-                )
+                }
             }
-
-            $groupPolicyBackupValues += $groupPolicyBackupValue
+            $groupPolicyBackupValues."Definitions" += $groupPolicyBackupValue
         }
 
         $fileName = ($groupPolicyConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'

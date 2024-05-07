@@ -33,11 +33,12 @@ function Invoke-SRIntuneBackupClientAppAssignment {
     $clientApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
    
     foreach ($clientApp in $clientApps) {
+        $clientAppType = $clientApp.'@odata.type'.split('.')[-1]
         $Uri = "$ApiVersion/deviceAppManagement/mobileApps/$($clientApp.id)/assignments"
         $assignments = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
         if ($assignments) {
             $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
+            $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientAppType)__$($fileName).json"
 
             [PSCustomObject]@{
                 "Action" = "Backup"

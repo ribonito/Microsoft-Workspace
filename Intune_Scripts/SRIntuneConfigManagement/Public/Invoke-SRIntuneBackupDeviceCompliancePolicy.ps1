@@ -29,7 +29,7 @@ function Invoke-SRIntuneBackupDeviceCompliancePolicy {
     }
 
     # Get all Device Compliance Policies
-    $Uri = "$ApiVersion/deviceManagement/deviceCompliancePolicies"
+    $Uri = "$ApiVersion/deviceManagement/deviceCompliancePolicies" #?$expand=scheduledActionsForRule" - not working as of 03.05.2024
     $deviceCompliancePolicies = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'

@@ -9,8 +9,14 @@ function Invoke-SRIntuneRestoreClientApps {
     .PARAMETER Path
     Root path where backup files are located
     
+    .PARAMETER SourceScopeTags
+    Hashtable containing scope tag names and ids imported from source backup
+    
+    .PARAMETER SameTenant
+    True if source tenant is the same as target, otherwise false
+    
     .EXAMPLE
-    Invoke-SRIntuneRestoreClientApps -Path "C:\temp" -RestoreById $true
+    Invoke-SRIntuneRestoreClientApps -Path "C:\temp"
     #>
     
     [CmdletBinding()]
@@ -18,26 +24,48 @@ function Invoke-SRIntuneRestoreClientApps {
         [Parameter(Mandatory = $true)]
         [string]$Path,
         [Parameter(Mandatory = $false)]
-        [switch]$Assigments,
+        [hashtable]$SourceScopeTags,
+        [Parameter(Mandatory = $false)]
+        [boolean]$SameTenant = $false,
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
 
+    #Get Source tenant scope tags
+    If (-not $SourceScopeTags) {
+    $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"
+    }
+
     # Get all applications
-    $ClientApps = Get-ChildItem -Path "$Path\Client Apps" -File -Include *.json
+    $ClientApps = Get-ChildItem -Path "$Path\Client Apps\*" -File -Include *.json
     foreach ($ClientApp in $ClientApps) {
         $ClientAppContent = Get-Content -LiteralPath $ClientApp.FullName -Raw
         $ClientAppDisplayName = ($ClientAppContent | ConvertFrom-Json).displayName
         $ClientAppType = ($ClientAppContent | ConvertFrom-Json).'@odata.type'
 
         # Win32 LOB, MSFB and Android managed store app restore is currently not working
-        if ($ClientAppType -ne "#microsoft.graph.win32LobApp" -and $ClientAppType -ne "#microsoft.graph.microsoftStoreForBusinessApp" -and $ClientAppType -ne "#microsoft.graph.androidManagedStoreApp") {
+        if ($ClientAppType -ne "#microsoft.graph.win32LobApp" -and $ClientAppType -ne "#microsoft.graph.microsoftStoreForBusinessApp" -and $ClientAppType -ne "#microsoft.graph.androidManagedStoreApp" -and $ClientAppType -ne "#microsoft.graph.androidManagedStoreWebApp") {
 
             # Remove properties that are not available for creating a new application
             $requestBodyObject = $ClientAppContent | ConvertFrom-Json
-            $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,'@odata.context',uploadState,appIdentifier,publishingState,usedLicenseCount,totalLicenseCount,productKey,licenseType,packageIdentityName | ConvertTo-Json -Depth 100
+            if ($requestBodyObject.roleScopeTagIds -and -not($SameTenant)) {
+                $i = 0
+                foreach ($ScopeTagIdJson in $requestBodyObject.roleScopeTagIds) {
+                    if($ScopeTagIdJson -ne "0"){
+                        # Replace scope tag IDs in the json with the ids in the target tenant based on scope name
+                        $ScopeTagNameCsv = $null
+                        $TargetScopeTagId = $null
+                        $ScopeTagNameCsv = ($SourceScopeTags.GetEnumerator() | Where-Object {$_.Name -eq $ScopeTagIdJson}).Value
+                        if($ScopeTagNameCsv){$TargetScopeTagId = Get-SRScopeTagId -ScopeTagName $ScopeTagNameCsv}
+                        if($TargetScopeTagId){$requestBodyObject.roleScopeTagIds[$i] = $TargetScopeTagId}
+                    }
+                    $i = $i+1
+                }
+            }
 
+            $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,'@odata.context',uploadState,publishingState,usedLicenseCount,totalLicenseCount,productKey,licenseType,packageIdentityName,isAssigned,supersededAppCount,dependentAppCount,supersedingAppCount,appAvailability | ConvertTo-Json -Depth 100
+            $requestbody
             # Restore the Device Compliance Policy
             try {
                 $Uri = "$ApiVersion/deviceAppManagement/mobileApps"
@@ -57,4 +85,4 @@ function Invoke-SRIntuneRestoreClientApps {
     }
 }
 
-Invoke-SRIntuneRestoreClientApps -Path "C:\temp\Intunerestore"
+#Invoke-SRIntuneRestoreClientApps -Path "C:\temp\Intunerestore"

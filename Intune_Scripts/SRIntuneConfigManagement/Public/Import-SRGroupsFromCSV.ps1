@@ -32,7 +32,14 @@ function Import-SRGroupsFromCSV {
         Return "Error"
     } else {
 
-    $GroupIDs = Import-Csv -Path $CSVFile
+    $CsvContent = Import-Csv -Path $CSVFile
+    foreach($Row in $CsvContent)
+    {
+        $GroupIDs[$row.Key]=$Row.Value
+    }
+
     Return $GroupIDs
     }
 }
+
+#Import-SRGroupsFromCSV -Path "C:\temp\intunerestore"

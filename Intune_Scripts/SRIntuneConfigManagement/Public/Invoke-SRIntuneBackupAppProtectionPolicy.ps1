@@ -87,4 +87,4 @@ function Invoke-SRIntuneBackupAppProtectionPolicy {
     }
 }
 
-#Invoke-SRIntuneBackupAppProtectionPolicy -Path "C:\temp\IntuneRestore"
+#Invoke-SRIntuneBackupAppProtectionPolicy -Path "C:\temp\IntuneBackup\functiontest"

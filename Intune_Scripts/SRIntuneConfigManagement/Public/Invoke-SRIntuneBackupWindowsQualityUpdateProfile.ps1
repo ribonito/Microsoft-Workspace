@@ -34,8 +34,6 @@
     $Profiles = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
 
     foreach ($Profile in $Profiles) {
-        $ProfileType = $($Profile.deviceEnrollmentConfigurationType)
-
         $fileName = ($Profile.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $Profile | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($fileName).json"
 

@@ -28,22 +28,22 @@
         $null = New-Item -Path "$Path\Device Health Scripts" -ItemType Directory
     }
 
+    # Create content folder if not exists
+    if (-not (Test-Path "$Path\Device Health Scripts\Script Content")) {
+        $null = New-Item -Path "$Path\Device Health Scripts\Script Content" -ItemType Directory
+    }
+
     $Uri = "$ApiVersion/deviceManagement/deviceHealthScripts"
     $healthScripts = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
 
     foreach ($healthScript in $healthScripts) {
-        $fileName = ($healthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-
         # Export the Health script profile
-        $healthScript | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\$fileName.json"
-
-        # Create folder if not exists
-        if (-not (Test-Path "$Path\Device Health Scripts\Script Content")) {
-            $null = New-Item -Path "$Path\Device Health Scripts\Script Content" -ItemType Directory
-        }
 
         $Uri = "https://graph.microsoft.com/$ApiVersion/deviceManagement/deviceHealthScripts/$($healthScript.id)"
         $healthScriptObject = Invoke-MgGraphRequest -Uri $Uri
+        $fileName = ($healthScriptObject.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $healthScriptObject | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\$fileName.json"
+
         $healthScriptDetectionContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($healthScriptObject.detectionScriptContent))
         $healthScriptDetectionContent | Out-File -LiteralPath "$path\Device Health Scripts\Script Content\$fileName`_detection.ps1"
         $healthScriptRemediationContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($healthScriptObject.remediationScriptContent))
@@ -52,7 +52,7 @@
         [PSCustomObject]@{
             "Action" = "Backup"
             "Type"   = "Device Health Scripts"
-            "Name"   = $healthScript.displayName
+            "Name"   = $healthScriptObject.displayName
             "Path"   = "Device Health Scripts\$fileName.json"
         }
     }

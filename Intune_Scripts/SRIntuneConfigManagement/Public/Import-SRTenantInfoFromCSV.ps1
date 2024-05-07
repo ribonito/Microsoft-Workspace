@@ -23,7 +23,7 @@ function Import-SRTenantInfoFromCSV {
         [string]$ApiVersion = "Beta"
     )
 
-    $FilterIDs = @{}
+    $TenantInfo = @{}
 
     # Check if csv file exists
     $CSVFile = "$Path\Tenant Info\TenantInfo.csv"
@@ -32,7 +32,14 @@ function Import-SRTenantInfoFromCSV {
         Return "Error"
     } else {
 
-    $TenantInfo = Import-Csv -Path $CSVFile
+    $CsvContent = Import-Csv -Path $CSVFile
+    foreach($Row in $CsvContent)
+    {
+        $TenantInfo[$row.Key]=$Row.Value
+    }
+
     Return $TenantInfo
     }
 }
+
+#Import-SRTenantInfoFromCSV -Path "C:\temp\intunerestore"

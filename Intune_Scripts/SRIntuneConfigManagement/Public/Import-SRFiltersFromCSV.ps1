@@ -32,7 +32,14 @@ function Import-SRFiltersFromCSV {
         Return "Error"
     } else {
 
-    $FilterIDs = Import-Csv -Path $CSVFile
+    $CsvContent = Import-Csv -Path $CSVFile
+    foreach($Row in $CsvContent)
+    {
+        $FilterIDs[$row.Key]=$Row.Value
+    }
+
     Return $FilterIDs
     }
 }
+
+#Import-SRFiltersFromCSV -Path "C:\temp\intunerestore"

@@ -39,10 +39,6 @@ function Invoke-SRIntuneBackupDeviceManagementIntent {
         $template = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
         $templateDisplayName = ($template.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 
-        if (-not (Test-Path "$Path\Device Management Intents\$templateDisplayName")) {
-            $null = New-Item -Path "$Path\Device Management Intents\$templateDisplayName" -ItemType Directory
-        }
-        
         # Get all setting categories in the Device Management Template
         Write-Verbose "Requesting Template Categories"
         $Uri = "$ApiVersion/deviceManagement/templates/$($intent.templateId)/categories"
@@ -62,15 +58,15 @@ function Invoke-SRIntuneBackupDeviceManagementIntent {
             "settingsDelta" = $intentSettingsDelta
             "roleScopeTagIds" = $intent.roleScopeTagIds
         }
-        
-        $fileName = ("$($template.id)_$($intent.displayName)").Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $intentBackupValue | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Intents\$templateDisplayName\$fileName.json"
+
+        $fileName = ("$($template.id)__$($intent.displayName)").Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $intentBackupValue | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Intents\$($templateDisplayName)__$($fileName).json"
 
         [PSCustomObject]@{
             "Action" = "Backup"
             "Type"   = "Device Management Intent"
             "Name"   = $intent.displayName
-            "Path"   = "Device Management Intents\$templateDisplayName\$fileName.json"
+            "Path"   = "Device Management Intents\$($templateDisplayName)__$($fileName).json"
         }
     }
 }

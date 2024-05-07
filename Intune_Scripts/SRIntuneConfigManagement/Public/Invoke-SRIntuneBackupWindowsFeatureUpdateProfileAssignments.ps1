@@ -38,8 +38,8 @@
         $assignments = Invoke-MgGraphRequest -Uri $Uri
 
         if ($assignments) {
-            $fileName = ($Profile.id).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($fileName).json"
+            $fileName = ($Profile.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+            $assignments.value | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\$Subfolder\$($fileName).json"
 
             [PSCustomObject]@{
                 "Action" = "Backup"

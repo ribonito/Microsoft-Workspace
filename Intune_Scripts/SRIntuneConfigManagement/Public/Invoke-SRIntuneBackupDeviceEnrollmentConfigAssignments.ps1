@@ -40,7 +40,7 @@
 
         if ($assignments) {
             $fileName = ($eConfig.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($eConfigType)_$($fileName).json"
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($eConfigType)__$($fileName).json"
 
             [PSCustomObject]@{
                 "Action" = "Backup"

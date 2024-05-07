@@ -9,11 +9,14 @@ function Invoke-SRIntuneRestoreAssignmentFilter {
     .PARAMETER Path
     Root path where backup files are located
     
-    .PARAMETER Assignments
-    Restores assignments located in the assignments subfolder
+    .PARAMETER SourceScopeTags
+    Hashtable containing scope tag names and ids imported from source backup
+    
+    .PARAMETER SameTenant
+    True if source tenant is the same as target, otherwise false
     
     .EXAMPLE
-    Invoke-SRIntuneRestoreAssignmentFilter -Path "C:\temp" -Assignments
+    Invoke-SRIntuneRestoreAssignmentFilter -Path "C:\temp"
     #>
     
     [CmdletBinding()]
@@ -21,11 +24,18 @@ function Invoke-SRIntuneRestoreAssignmentFilter {
         [Parameter(Mandatory = $true)]
         [string]$Path,
         [Parameter(Mandatory = $false)]
-        [switch]$Assigments,
+        [hashtable]$SourceScopeTags,
+        [Parameter(Mandatory = $false)]
+        [boolean]$SameTenant = $false,
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
+
+    #Get Source tenant scope tags
+    If (-not $SourceScopeTags) {
+    $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"
+    }
 
     # Get all assignment filters
     $Profiles = Get-ChildItem -Path "$path\Assignment Filters\*" -Include *.json
@@ -36,9 +46,19 @@ function Invoke-SRIntuneRestoreAssignmentFilter {
 
         # Remove properties that are not available for creating action
         $requestBodyObject = $ProfileContent | ConvertFrom-Json
-        # Set SupportsScopeTags to $false, because $true currently returns an HTTP Status 400 Bad Request error.
-        if ($requestBodyObject.supportsScopeTags) {
-            $requestBodyObject.supportsScopeTags = $false
+        if ($requestBodyObject.roleScopeTagIds -and -not($SameTenant)) {
+            $i = 0
+            foreach ($ScopeTagIdJson in $requestBodyObject.roleScopeTagIds) {
+                if($ScopeTagIdJson -ne "0"){
+                    # Replace scope tag IDs in the json with the ids in the target tenant based on scope name
+                    $ScopeTagNameCsv = $null
+                    $TargetScopeTagId = $null
+                    $ScopeTagNameCsv = ($SourceScopeTags.GetEnumerator() | Where-Object {$_.Name -eq $ScopeTagIdJson}).Value
+                    if($ScopeTagNameCsv){$TargetScopeTagId = Get-SRScopeTagId -ScopeTagName $ScopeTagNameCsv}
+                    if($TargetScopeTagId){$requestBodyObject.roleScopeTagIds[$i] = $TargetScopeTagId}
+                }
+                $i = $i+1
+            }
         }
 
         $requestBodyObject.PSObject.Properties | Foreach-Object {
