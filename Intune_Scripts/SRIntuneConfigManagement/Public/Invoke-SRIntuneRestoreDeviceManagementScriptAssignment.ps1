@@ -35,6 +35,12 @@ function Invoke-SRIntuneRestoreDeviceManagementScriptAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Management Scripts\Assignments")) {
+        Write-Warning "Folder '$Path\Device Management Scripts\Assignments' doesn't exist. Skipping restore of Device Management Script Assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

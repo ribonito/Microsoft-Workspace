@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreDeviceHealthScript {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Health Scripts")) {
+        Write-Warning "Folder '$Path\Device Health Scripts' doesn't exist. Skipping restore of Device Health Scripts"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

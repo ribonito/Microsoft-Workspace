@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfig {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Enrollment")) {
+        Write-Warning "Folder '$Path\Device Enrollment' doesn't exist. Skipping restore of Device Enrollment configuration profiles"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

@@ -1,4 +1,4 @@
-function Invoke-SRIntuneRestoreAutopilotDeploymentProfiles {
+function Invoke-SRIntuneRestoreAutopilotDeploymentProfile {
     <#
     .SYNOPSIS
     Restore Intune Autopilot profiles
@@ -16,7 +16,7 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfiles {
     True if source tenant is the same as target, otherwise false
     
     .EXAMPLE
-    Invoke-SRIntuneRestoreAutopilotDeploymentProfiles -Path "C:\temp" -Assignments
+    Invoke-SRIntuneRestoreAutopilotDeploymentProfile -Path "C:\temp" -Assignments
     #>
     
     [CmdletBinding()]
@@ -31,6 +31,12 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfiles {
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
+
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Autopilot Deployment Profiles")) {
+        Write-Warning "Folder '$Path\Autopilot Deployment Profiles' doesn't exist. Skipping restore of Autopilot profiles"
+        Return
+    }
 
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
@@ -90,4 +96,4 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfiles {
     }
 }
 
-#Invoke-SRIntuneRestoreAutopilotDeploymentProfiles -Path "C:\temp\Intunerestore"
+#Invoke-SRIntuneRestoreAutopilotDeploymentProfile -Path "C:\temp\Intunerestore"

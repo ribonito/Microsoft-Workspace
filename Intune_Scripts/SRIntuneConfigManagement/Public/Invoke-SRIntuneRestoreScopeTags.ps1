@@ -27,6 +27,12 @@ function Invoke-SRIntuneRestoreScopeTags {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Scope Tags")) {
+        Write-Warning "Folder '$Path\Scope Tags' doesn't exist. Skipping restore of Scope Tags"
+        Return
+    }
+
     # Get all json files
     $Profiles = Get-ChildItem -Path "$path\Scope Tags\*" -Include *.json
     

@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreDeviceManagementScript {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Management Scripts")) {
+        Write-Warning "Folder '$Path\Device Management Scripts' doesn't exist. Skipping restore of Device Management Scripts"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreBrandingProfiles {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Branding profiles")) {
+        Write-Warning "Folder '$Path\Branding profiles' doesn't exist. Skipping restore of Branding profiles"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

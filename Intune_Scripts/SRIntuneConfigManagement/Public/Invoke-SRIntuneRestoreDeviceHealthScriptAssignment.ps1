@@ -37,6 +37,12 @@ function Invoke-SRIntuneRestoreDeviceHealthScriptAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Health Scripts\Assignments")) {
+        Write-Warning "Folder '$Path\Device Health Scripts\Assignments' doesn't exist. Skipping restore of Device Health Script Assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

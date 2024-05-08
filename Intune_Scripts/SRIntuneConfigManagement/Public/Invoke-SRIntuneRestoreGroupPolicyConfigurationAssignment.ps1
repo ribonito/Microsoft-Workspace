@@ -37,6 +37,12 @@ function Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Administrative Templates\Assignments")) {
+        Write-Warning "Folder '$Path\Administrative Templates\Assignments' doesn't exist. Skipping restore of Administrative Template Configuration Assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

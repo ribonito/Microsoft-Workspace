@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreWindowsDriverUpdateProfile {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Windows Driver Update Profiles")) {
+        Write-Warning "Folder '$Path\Windows Driver Update Profiles' doesn't exist. Skipping restore of Windows Driver Update Profiles"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

@@ -37,6 +37,12 @@ function Invoke-SRIntuneRestoreClientAppAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Client Apps\Assignments")) {
+        Write-Warning "Folder '$Path\Client Apps\Assignments' doesn't exist. Skipping restore of Client app Assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

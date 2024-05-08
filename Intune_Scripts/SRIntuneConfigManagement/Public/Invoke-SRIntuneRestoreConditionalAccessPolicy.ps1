@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreConditionalAccessPolicy {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Conditional Access Policies")) {
+        Write-Warning "Folder '$Path\Conditional Access Policies' doesn't exist. Skipping restore of Conditional Access Policies"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

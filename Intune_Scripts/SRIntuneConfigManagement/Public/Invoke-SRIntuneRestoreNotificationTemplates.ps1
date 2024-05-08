@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreNotificationTemplates {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Notification templates")) {
+        Write-Warning "Folder '$Path\Notification templates' doesn't exist. Skipping restore of Notification templates"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

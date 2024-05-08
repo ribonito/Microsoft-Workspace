@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Windows Feature Update Profiles")) {
+        Write-Warning "Folder '$Path\Windows Feature Update Profiless' doesn't exist. Skipping restore of Windows Feature Update Profiles"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

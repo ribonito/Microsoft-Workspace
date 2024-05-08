@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreDeviceCompliancePolicy {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Compliance Policies")) {
+        Write-Warning "Folder '$Path\Device Compliance Policies' doesn't exist. Skipping restore of Device Compliance Policies"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

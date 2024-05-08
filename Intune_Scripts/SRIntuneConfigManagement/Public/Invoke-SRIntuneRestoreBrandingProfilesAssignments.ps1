@@ -35,6 +35,12 @@ function Invoke-SRIntuneRestoreBrandingProfilesAssignments {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Branding profiles\Assignments")) {
+        Write-Warning "Folder '$Path\Branding profiles\Assignments' doesn't exist. Skipping restore of Branding profile assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"
@@ -58,7 +64,7 @@ function Invoke-SRIntuneRestoreBrandingProfilesAssignments {
             }
         }
         catch {
-            Write-Verbose "Error retrieving Branding profiles for $BrandingProfileObject, does it exist in the Intune tenant? Skipping assignment restore ..." -Verbose
+            Write-Verbose "Error retrieving Branding profile assignments for $BrandingProfileObject, does it exist in the Intune tenant? Skipping assignment restore ..." -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }

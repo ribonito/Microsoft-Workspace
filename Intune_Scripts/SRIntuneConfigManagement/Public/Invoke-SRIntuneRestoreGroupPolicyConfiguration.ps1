@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreGroupPolicyConfiguration {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Administrative Templates")) {
+        Write-Warning "Folder '$Path\Administrative Templates' doesn't exist. Skipping restore of Administrative Template Configurations"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

@@ -37,6 +37,12 @@ function Invoke-SRIntuneRestoreAppProtectionPolicyAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\App Protection Policies\Assignments")) {
+        Write-Warning "Folder '$Path\App Protection Policies\Assignments' doesn't exist. Skipping restore of App Protection Policy Assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

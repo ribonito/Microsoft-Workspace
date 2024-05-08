@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreDeviceConfiguration {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Configurations")) {
+        Write-Warning "Folder '$Path\Device Configurations' doesn't exist. Skipping restore of Device Configurations"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"
@@ -69,7 +75,7 @@ function Invoke-SRIntuneRestoreDeviceConfiguration {
             }
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json -Depth 100
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version, supportsScopeTags | ConvertTo-Json -Depth 100
         # Restore the device configuration
         #$requestBody
         try {

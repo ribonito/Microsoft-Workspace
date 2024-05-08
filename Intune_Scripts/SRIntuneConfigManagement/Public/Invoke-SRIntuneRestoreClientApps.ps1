@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreClientApps {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Client Apps")) {
+        Write-Warning "Folder '$Path\Client Apps' doesn't exist. Skipping restore of applications"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

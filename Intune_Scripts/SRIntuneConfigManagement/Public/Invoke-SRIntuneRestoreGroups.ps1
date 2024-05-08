@@ -22,8 +22,22 @@ function Invoke-SRIntuneRestoreGroups {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Groups")) {
+        Write-Warning "Folder '$Path\Groups' doesn't exist. Skipping restore of groups"
+        Return
+    }
+
     # Get all groups
     $Groups = Get-ChildItem -Path "$path\Groups\*" -Include *.json
+
+    if ($SameTenant -and $Groups) {
+        #Confirm restoration of groups
+        $confirmation = Read-Host "You are restoring $($Groups.count) in the same tenant. Are you sure you want to do this? (y/n)"
+        if ($confirmation -ne 'y') {
+            return
+        }        
+    }
     
     foreach ($Group in $Groups) {
         $GroupContent = Get-Content -LiteralPath $Group.FullName -Raw

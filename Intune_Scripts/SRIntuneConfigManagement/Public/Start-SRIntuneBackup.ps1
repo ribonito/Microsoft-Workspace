@@ -24,8 +24,6 @@ function Start-SRIntuneBackup() {
         [string]$Path
     )
 
-    #Import-Module Microsoft.Graph.Intune
-    #Connect-MSGraph | Out-Null
     Connect-MgGraph -Scopes Policy.Read.All,Policy.Read.ConditionalAccess,Application.Read.All,Group.Read.All,DeviceManagementConfiguration.Read.All,DeviceManagementApps.Read.All,DeviceManagementRBAC.Read.All,DeviceManagementServiceConfig.Read.All -NoWelcome
 
     # Get tenant details
@@ -43,6 +41,7 @@ function Start-SRIntuneBackup() {
     }
 
     Invoke-SRIntuneBackupTenantInfo -Path $Path -ApiVersion v1.0
+	Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupAppProtectionPolicy -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupAppProtectionPolicyAssignment -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupAssignmentFilter -Path $Path -ApiVersion beta
@@ -78,5 +77,4 @@ function Start-SRIntuneBackup() {
 	Invoke-SRIntuneBackupWindowsFeatureUpdateProfileAssignments -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupWindowsQualityUpdateProfile -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupWindowsQualityUpdateProfileAssignments -Path $Path -ApiVersion beta
-
 }

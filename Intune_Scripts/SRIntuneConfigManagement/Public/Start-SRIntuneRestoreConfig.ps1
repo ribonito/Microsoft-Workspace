@@ -62,37 +62,41 @@ function Start-SRIntuneRestoreConfig() {
     Invoke-SRIntuneRestoreScopeTags -Path $Path
     Invoke-SRIntuneRestoreGroups -Path $Path
     Invoke-SRIntuneRestoreAssignmentFilter -Path $Path
-    Invoke-SRIntuneRestoreNotificationTemplates
+    Invoke-SRIntuneRestoreNotificationTemplates -Path $Path
 
-	Invoke-SRIntuneRestoreAppProtectionPolicy -Path $Path
-	Invoke-SRIntuneRestoreAppProtectionPolicyAssignment -Path $Path
+	Invoke-SRIntuneRestoreAndroidDeviceEnrollmentProfile -Path $Path
+    Invoke-SRIntuneRestoreAppProtectionPolicy -Path $Path
 	Invoke-SRIntuneRestoreAutopilotDeploymentProfile -Path $Path
-	Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignments -Path $Path
 	Invoke-SRIntuneRestoreBrandingProfiles -Path $Path
-	Invoke-SRIntuneRestoreBrandingProfilesAssignments -Path $Path
 	Invoke-SRIntuneRestoreClientApps -Path $Path
-	Invoke-SRIntuneRestoreClientAppAssignment -Path $Path
 	Invoke-SRIntuneRestoreConditionalAccessPolicy -Path $Path
 	Invoke-SRIntuneRestoreDeviceCompliancePolicy -Path $Path
-	Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment -Path $Path
 	Invoke-SRIntuneRestoreDeviceConfiguration -Path $Path
-	Invoke-SRIntuneRestoreDeviceConfigurationAssignment -Path $Path
 	Invoke-SRIntuneRestoreDeviceEnrollmentConfig -Path $Path
-	Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment -Path $Path
 	Invoke-SRIntuneRestoreDeviceHealthScript -Path $Path
-	Invoke-SRIntuneRestoreDeviceHealthScriptAssignment -Path $Path
 	Invoke-SRIntuneRestoreDeviceManagementIntent -Path $Path
-	Invoke-SRIntuneRestoreDeviceManagementIntentAssignment -Path $Path
 	Invoke-SRIntuneRestoreDeviceManagementScript -Path $Path
-	Invoke-SRIntuneRestoreDeviceManagementScriptAssignment -Path $Path
 	Invoke-SRIntuneRestoreGroupPolicyConfiguration -Path $Path
-	Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment -Path $Path
 	Invoke-SRIntuneRestoreWindowsDriverUpdateProfile -Path $Path
-	Invoke-SRIntuneRestoreWindowsDriverUpdateProfileAssignment -Path $Path
 	Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile -Path $Path
-	Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignment -Path $Path
 	Invoke-SRIntuneRestoreWindowsQualityUpdateProfile -Path $Path
-	Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignment -Path $Path
+
+    if ($Assigments) {
+    	Invoke-SRIntuneRestoreAppProtectionPolicyAssignment -Path $Path
+	    Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment -Path $Path
+    	Invoke-SRIntuneRestoreBrandingProfilesAssignments -Path $Path
+	    Invoke-SRIntuneRestoreClientAppAssignment -Path $Path
+    	Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment -Path $Path
+	    Invoke-SRIntuneRestoreDeviceConfigurationAssignment -Path $Path
+    	Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment -Path $Path
+	    Invoke-SRIntuneRestoreDeviceHealthScriptAssignment -Path $Path
+    	Invoke-SRIntuneRestoreDeviceManagementIntentAssignments -Path $Path
+    	Invoke-SRIntuneRestoreDeviceManagementScriptAssignment -Path $Path
+	    Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment -Path $Path
+    	Invoke-SRIntuneRestoreWindowsDriverUpdateProfileAssignments -Path $Path
+	    Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments -Path $Path
+	    Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments -Path $Path
+    }
 }
 
 #Start-SRIntuneRestoreConfig -Path C:\temp\intunerestore -Assigments

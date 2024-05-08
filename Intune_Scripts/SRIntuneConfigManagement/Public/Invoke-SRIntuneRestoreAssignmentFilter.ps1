@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreAssignmentFilter {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Assignment Filters")) {
+        Write-Warning "Folder '$Path\Assignment Filters' doesn't exist. Skipping restore of Assignment Filters"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"

@@ -37,6 +37,12 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\Device Enrollment\Assignments")) {
+        Write-Warning "Folder '$Path\Device Enrollment\Assignments' doesn't exist. Skipping restore of Device Enrollment Assignments"
+        Return
+    }
+
     if (-not $SameTenant) {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"

@@ -32,6 +32,12 @@ function Invoke-SRIntuneRestoreAppProtectionPolicy {
         [string]$ApiVersion = "Beta"
     )
 
+    # Check if restore folder exists
+    if (-not (Test-Path "$Path\App Protection Policies")) {
+        Write-Warning "Folder '$Path\App Protection Policies' doesn't exist. Skipping restore of App Protection Policies"
+        Return
+    }
+
     #Get Source tenant scope tags
     If (-not $SourceScopeTags) {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"
