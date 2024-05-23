@@ -51,4 +51,4 @@
     $Nmts.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\$Subfolder\NotifMsgTmpl.csv" -NoTypeInformation
 }
 
-Invoke-SRIntuneBackupNotificationTemplates -Path "C:\temp\IntuneBackup\FunctionTest"
+#Invoke-SRIntuneBackupNotificationTemplates -Path "C:\temp\IntuneBackup\FunctionTest"
