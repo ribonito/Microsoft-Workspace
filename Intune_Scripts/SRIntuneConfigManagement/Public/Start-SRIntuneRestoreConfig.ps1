@@ -53,6 +53,7 @@ function Start-SRIntuneRestoreConfig() {
 
     If (!($SameTenant)) {
         $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"
+        $SourceApps = Import-SRAppsFromCSV -Path "$Path"
         If ($Assigments) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"
             $SourceFilters = Import-SRFiltersFromCSV -Path "$Path"
@@ -63,12 +64,13 @@ function Start-SRIntuneRestoreConfig() {
     Invoke-SRIntuneRestoreGroups -Path $Path
     Invoke-SRIntuneRestoreAssignmentFilter -Path $Path
     Invoke-SRIntuneRestoreNotificationTemplates -Path $Path
+	Invoke-SRIntuneRestoreClientApps -Path $Path
 
 	Invoke-SRIntuneRestoreAndroidDeviceEnrollmentProfile -Path $Path
     Invoke-SRIntuneRestoreAppProtectionPolicy -Path $Path
 	Invoke-SRIntuneRestoreAutopilotDeploymentProfile -Path $Path
 	Invoke-SRIntuneRestoreBrandingProfiles -Path $Path
-	Invoke-SRIntuneRestoreClientApps -Path $Path
+	Invoke-SRIntuneRestoreAppConfigurationPolicy -Path $Path
 	Invoke-SRIntuneRestoreConditionalAccessPolicy -Path $Path
 	Invoke-SRIntuneRestoreDeviceCompliancePolicy -Path $Path
 	Invoke-SRIntuneRestoreDeviceConfiguration -Path $Path
@@ -86,6 +88,7 @@ function Start-SRIntuneRestoreConfig() {
 	    Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment -Path $Path
     	Invoke-SRIntuneRestoreBrandingProfilesAssignments -Path $Path
 	    Invoke-SRIntuneRestoreClientAppAssignment -Path $Path
+        Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment -Path $Path
     	Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment -Path $Path
 	    Invoke-SRIntuneRestoreDeviceConfigurationAssignment -Path $Path
     	Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment -Path $Path

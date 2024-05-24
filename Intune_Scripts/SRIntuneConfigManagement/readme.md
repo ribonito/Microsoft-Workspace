@@ -12,103 +12,107 @@ The scripts have modular architecture where functions are combined into a single
 
 #Supported functions
 
-Invoke-SRIntuneBackupTenantInfo
-Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile
-Invoke-SRIntuneBackupAppProtectionPolicy
-Invoke-SRIntuneBackupAppProtectionPolicyAssignment
-Invoke-SRIntuneBackupAssignmentFilter
-Invoke-SRIntuneBackupAutopilotDeploymentProfile
-Invoke-SRIntuneBackupAutopilotDeploymentProfileAssignments
-Invoke-SRIntuneBackupBrandingProfiles
-Invoke-SRIntuneBackupBrandingProfilesAssignments
-Invoke-SRIntuneBackupClientApp
-Invoke-SRIntuneBackupClientAppAssignment
-Invoke-SRIntuneBackupNotificationTemplates
-Invoke-SRIntuneBackupConditionalAccessPolicy
-Invoke-SRIntuneBackupConfigurationPolicy
-Invoke-SRIntuneBackupConfigurationPolicyAssignment
-Invoke-SRIntuneBackupDeviceCompliancePolicy
-Invoke-SRIntuneBackupDeviceCompliancePolicyAssignment
-Invoke-SRIntuneBackupDeviceConfiguration
-Invoke-SRIntuneBackupDeviceConfigurationAssignment
-Invoke-SRIntuneBackupDeviceEnrollmentConfig
-Invoke-SRIntuneBackupDeviceEnrollmentConfigAssignments
-Invoke-SRIntuneBackupDeviceHealthScript
-Invoke-SRIntuneBackupDeviceHealthScriptAssignment
-Invoke-SRIntuneBackupDeviceManagementIntent
-Invoke-SRIntuneBackupDeviceManagementIntentAssignments
-Invoke-SRIntuneBackupDeviceManagementScript
-Invoke-SRIntuneBackupDeviceManagementScriptAssignment
-Invoke-SRIntuneBackupGroupPolicyConfiguration
-Invoke-SRIntuneBackupGroupPolicyConfigurationAssignment
-Invoke-SRIntuneBackupGroups
-Invoke-SRIntuneBackupScopeTag
-Invoke-SRIntuneBackupWindowsDriverUpdateProfile
-Invoke-SRIntuneBackupWindowsDriverUpdateProfileAssignments
-Invoke-SRIntuneBackupWindowsFeatureUpdateProfile
-Invoke-SRIntuneBackupWindowsFeatureUpdateProfileAssignments
-Invoke-SRIntuneBackupWindowsQualityUpdateProfile
-Invoke-SRIntuneBackupWindowsQualityUpdateProfileAssignments
-Invoke-SRIntuneRestoreScopeTags
-Invoke-SRIntuneRestoreGroups
-Invoke-SRIntuneRestoreAssignmentFilter
-Invoke-SRIntuneRestoreNotificationTemplates
-Invoke-SRIntuneRestoreAndroidDeviceEnrollmentProfile
-Invoke-SRIntuneRestoreAppProtectionPolicy
-Invoke-SRIntuneRestoreAutopilotDeploymentProfile
-Invoke-SRIntuneRestoreBrandingProfiles
-Invoke-SRIntuneRestoreClientApps
-Invoke-SRIntuneRestoreConditionalAccessPolicy
-Invoke-SRIntuneRestoreDeviceCompliancePolicy
-Invoke-SRIntuneRestoreDeviceConfiguration
-Invoke-SRIntuneRestoreDeviceEnrollmentConfig
-Invoke-SRIntuneRestoreDeviceHealthScript
-Invoke-SRIntuneRestoreDeviceManagementIntent
-Invoke-SRIntuneRestoreDeviceManagementScript
-Invoke-SRIntuneRestoreGroupPolicyConfiguration
-Invoke-SRIntuneRestoreWindowsDriverUpdateProfile
-Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile
-Invoke-SRIntuneRestoreWindowsQualityUpdateProfile
-Invoke-SRIntuneRestoreAppProtectionPolicyAssignment
-Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment
-Invoke-SRIntuneRestoreBrandingProfilesAssignments
-Invoke-SRIntuneRestoreClientAppAssignment
-Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment
-Invoke-SRIntuneRestoreDeviceConfigurationAssignment
-Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment
-Invoke-SRIntuneRestoreDeviceHealthScriptAssignment
-Invoke-SRIntuneRestoreDeviceManagementIntentAssignments
-Invoke-SRIntuneRestoreDeviceManagementScriptAssignment
-Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment
-Invoke-SRIntuneRestoreWindowsDriverUpdateProfileAssignments
-Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments
-Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments
+- Invoke-SRIntuneBackupTenantInfo
+- Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile
+- Invoke-SRIntuneBackupAppProtectionPolicy
+- Invoke-SRIntuneBackupAppProtectionPolicyAssignment
+- Invoke-SRIntuneBackupAppConfigurationPolicy
+- Invoke-SRIntuneBackupAppConfigurationPolicyAssignment
+- Invoke-SRIntuneBackupAssignmentFilter
+- Invoke-SRIntuneBackupAutopilotDeploymentProfile
+- Invoke-SRIntuneBackupAutopilotDeploymentProfileAssignments
+- Invoke-SRIntuneBackupBrandingProfiles
+- Invoke-SRIntuneBackupBrandingProfilesAssignments
+- Invoke-SRIntuneBackupClientApp
+- Invoke-SRIntuneBackupClientAppAssignment
+- Invoke-SRIntuneBackupNotificationTemplates
+- Invoke-SRIntuneBackupConditionalAccessPolicy
+- Invoke-SRIntuneBackupConfigurationPolicy
+- Invoke-SRIntuneBackupConfigurationPolicyAssignment
+- Invoke-SRIntuneBackupDeviceCompliancePolicy
+- Invoke-SRIntuneBackupDeviceCompliancePolicyAssignment
+- Invoke-SRIntuneBackupDeviceConfiguration
+- Invoke-SRIntuneBackupDeviceConfigurationAssignment
+- Invoke-SRIntuneBackupDeviceEnrollmentConfig
+- Invoke-SRIntuneBackupDeviceEnrollmentConfigAssignments
+- Invoke-SRIntuneBackupDeviceHealthScript
+- Invoke-SRIntuneBackupDeviceHealthScriptAssignment
+- Invoke-SRIntuneBackupDeviceManagementIntent
+- Invoke-SRIntuneBackupDeviceManagementIntentAssignments
+- Invoke-SRIntuneBackupDeviceManagementScript
+- Invoke-SRIntuneBackupDeviceManagementScriptAssignment
+- Invoke-SRIntuneBackupGroupPolicyConfiguration
+- Invoke-SRIntuneBackupGroupPolicyConfigurationAssignment
+- Invoke-SRIntuneBackupGroups
+- Invoke-SRIntuneBackupScopeTag
+- Invoke-SRIntuneBackupWindowsDriverUpdateProfile
+- Invoke-SRIntuneBackupWindowsDriverUpdateProfileAssignments
+- Invoke-SRIntuneBackupWindowsFeatureUpdateProfile
+- Invoke-SRIntuneBackupWindowsFeatureUpdateProfileAssignments
+- Invoke-SRIntuneBackupWindowsQualityUpdateProfile
+- Invoke-SRIntuneBackupWindowsQualityUpdateProfileAssignments
+- Invoke-SRIntuneRestoreScopeTags
+- Invoke-SRIntuneRestoreGroups
+- Invoke-SRIntuneRestoreAssignmentFilter
+- Invoke-SRIntuneRestoreNotificationTemplates
+- Invoke-SRIntuneRestoreAndroidDeviceEnrollmentProfile
+- Invoke-SRIntuneRestoreAppProtectionPolicy
+- Invoke-SRIntuneRestoreAppConfigurationPolicy
+- Invoke-SRIntuneRestoreAutopilotDeploymentProfile
+- Invoke-SRIntuneRestoreBrandingProfiles
+- Invoke-SRIntuneRestoreClientApps
+- Invoke-SRIntuneRestoreConditionalAccessPolicy
+- Invoke-SRIntuneRestoreDeviceCompliancePolicy
+- Invoke-SRIntuneRestoreDeviceConfiguration
+- Invoke-SRIntuneRestoreDeviceEnrollmentConfig
+- Invoke-SRIntuneRestoreDeviceHealthScript
+- Invoke-SRIntuneRestoreDeviceManagementIntent
+- Invoke-SRIntuneRestoreDeviceManagementScript
+- Invoke-SRIntuneRestoreGroupPolicyConfiguration
+- Invoke-SRIntuneRestoreWindowsDriverUpdateProfile
+- Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile
+- Invoke-SRIntuneRestoreWindowsQualityUpdateProfile
+- Invoke-SRIntuneRestoreAppProtectionPolicyAssignment
+- Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment
+- Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment
+- Invoke-SRIntuneRestoreBrandingProfilesAssignments
+- Invoke-SRIntuneRestoreClientAppAssignment
+- Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment
+- Invoke-SRIntuneRestoreDeviceConfigurationAssignment
+- Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment
+- Invoke-SRIntuneRestoreDeviceHealthScriptAssignment
+- Invoke-SRIntuneRestoreDeviceManagementIntentAssignments
+- Invoke-SRIntuneRestoreDeviceManagementScriptAssignment
+- Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment
+- Invoke-SRIntuneRestoreWindowsDriverUpdateProfileAssignments
+- Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments
+- Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments
 
 ##Authentication requirements
 To obtain sufficient permissions for performing backup and restore operations in Intune using the PowerShell module, delagated permissions must be granted by a tenant administrator to Microsoft Graph Command Line Tools enterprise application. This can be done in advance or when prompted during authentication when the module is used in a tenant for the first time.    
 
 For backup operations the following delegated permissions must be granted to Microsoft Graph Command Line Tools application:
 
-Policy.Read.All
-Policy.Read.ConditionalAccess
-Application.Read.All
-Group.Read.All
-DeviceManagementConfiguration.Read.All
-DeviceManagementApps.Read.All
-DeviceManagementRBAC.Read.All
-DeviceManagementServiceConfig.Read.All
+- Policy.Read.All
+- Policy.Read.ConditionalAccess
+- Application.Read.All
+- Group.Read.All
+- DeviceManagementConfiguration.Read.All
+- DeviceManagementApps.Read.All
+- DeviceManagementRBAC.Read.All
+- DeviceManagementServiceConfig.Read.All
 
 For restore operations the following delegated permissions must be granted to Microsoft Graph Command Line Tools application:
 
-DeviceManagementManagedDevices.PrivilegedOperations.All
-DeviceManagementManagedDevices.ReadWrite.All
-DeviceManagementRBAC.ReadWrite.All
-DeviceManagementApps.ReadWrite.All
-DeviceManagementConfiguration.ReadWrite.All
-DeviceManagementServiceConfig.ReadWrite.All
-Group.ReadWrite.All
-GroupMember.ReadWrite.All
-Directory.Read.All
+- DeviceManagementManagedDevices.PrivilegedOperations.All
+- DeviceManagementManagedDevices.ReadWrite.All
+- DeviceManagementRBAC.ReadWrite.All
+- DeviceManagementApps.ReadWrite.All
+- DeviceManagementConfiguration.ReadWrite.All
+- DeviceManagementServiceConfig.ReadWrite.All
+- Group.ReadWrite.All
+- GroupMember.ReadWrite.All
+- Directory.Read.All
 
 #Open issues
 NotificationMessageTemplates - restore is not working
@@ -137,11 +141,12 @@ Example:
 
 ##Dependent object information
 When backup is created DisplayName and id pairs are preserved in addition to json files in form of CSV files. This facilitates restore of object references when restoring in another tenant where reference objects have different ids. DisplayNames are used as keys. This concerns the following object types:
-Azure AD groups
-Assignment filters
-Role Scope tags
-Notification templates
-Tenant
+- Azure AD groups
+- Assignment filters
+- Role Scope tags
+- Notification templates
+- Tenant
+- Applications
 
 #Restoring Intune data from backup
 DisplayName property is always used as the identificator of any object being restored. Objects in Intune always have IDs used a preimary identifyers. Restore actions always creates a new object with the same name if restore in the same tenant. DisplayName can be changed in json files to restore the object with another name.

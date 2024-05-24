@@ -69,22 +69,6 @@ function Invoke-SRIntuneBackupAppProtectionPolicy {
             "Path"   = "App Protection Policies\$fileName.json"
         }
     }
-
-    # Get all app configuration policies for managed devices
-    $Uri = "$ApiVersion/deviceAppManagement/mobileAppConfigurations"
-    $appConfigPolicies = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
-
-    foreach ($appConfigPolicy in $appConfigPolicies) {
-        $fileName = ($appConfigPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $appConfigPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
-
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "App Configuration Policy"
-            "Name"   = $appConfigPolicy.displayName
-            "Path"   = "App Protection Policies\$fileName.json"
-        }
-    }
 }
 
 #Invoke-SRIntuneBackupAppProtectionPolicy -Path "C:\temp\IntuneBackup\functiontest"

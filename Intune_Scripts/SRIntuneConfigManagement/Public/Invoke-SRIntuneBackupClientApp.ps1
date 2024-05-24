@@ -28,6 +28,7 @@ function Invoke-SRIntuneBackupClientApp {
         $null = New-Item -Path "$Path\Client Apps" -ItemType Directory
     }
 
+    $appIDs = @{}
     # Get all Client Apps
     $Uri = "$ApiVersion/deviceAppManagement/mobileApps?$filter=(microsoft.graph.managedApp/appAvailability%20eq%20null%20or%20microsoft.graph.managedApp/appAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)"
     $clientApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
@@ -39,6 +40,8 @@ function Invoke-SRIntuneBackupClientApp {
         $Uri = "$ApiVersion/deviceAppManagement/mobileApps/$($clientApp.id)"
         $clientAppDetails = Invoke-MgGraphRequest -Uri $Uri 
         $clientAppDetails | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json"
+        #Store group name and id in a hash table
+        $appIDs.Add($clientApp.id, $clientApp.displayName)
 
         [PSCustomObject]@{
             "Action" = "Backup"
@@ -47,6 +50,8 @@ function Invoke-SRIntuneBackupClientApp {
             "Path"   = "Client Apps\$($clientAppType)_$($fileName).json"
         }
     }
+    #Store group hash table in a CSV file
+    $appIDs.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\Client Apps\AppIDs.csv" -NoTypeInformation
 }
 
 #Invoke-SRIntuneBackupClientApp -Path "C:\temp\IntuneBackup\FunctionTest"
