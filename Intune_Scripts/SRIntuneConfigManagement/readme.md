@@ -8,11 +8,13 @@ The scripts have modular architecture where functions are combined into a single
 **SRIntuneConfigManagement**
 
 #Current version
-**1.0**
+**1.1**
 
 #Supported functions
 
 - Invoke-SRIntuneBackupTenantInfo
+- Invoke-SRIntuneBackupAdminRole
+- Invoke-SRIntuneBackupAdminRoleAssignment
 - Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile
 - Invoke-SRIntuneBackupAppProtectionPolicy
 - Invoke-SRIntuneBackupAppProtectionPolicyAssignment
@@ -115,11 +117,12 @@ For restore operations the following delegated permissions must be granted to Mi
 - Directory.Read.All
 
 #Open issues
-NotificationMessageTemplates - restore is not working
-Device compliance policies, scheduledActionsForRule - backup / restore not working
-Restore of win32 apps is not working. Issues with intunewin file commit after uploading
-windowsAutopilotDeploymentProfiles - restore of assignments is not working. It looks like a bug in MSGraph
-Default enrollment configuration objects are not working
+
+- NotificationMessageTemplates - restore is not working
+- Device compliance policies, scheduledActionsForRule - backup / restore not working
+- Restore of win32 apps is not working. Issues with intunewin file commit after uploading
+- windowsAutopilotDeploymentProfiles - restore of assignments is not working. It looks like a bug in MSGraph
+- Default enrollment configuration objects are not working
 
 #Notes
 The module uses MSGraph calls diretly without reliance on other PowerShell modules. Mainly Invoke-MgGraphRequest is used to make Graph calls.
@@ -147,6 +150,7 @@ When backup is created DisplayName and id pairs are preserved in addition to jso
 - Notification templates
 - Tenant
 - Applications
+- Administrative roles
 
 #Restoring Intune data from backup
 DisplayName property is always used as the identificator of any object being restored. Objects in Intune always have IDs used a preimary identifyers. Restore actions always creates a new object with the same name if restore in the same tenant. DisplayName can be changed in json files to restore the object with another name.
@@ -157,3 +161,8 @@ To restore Intune configuration use the following command
 
 To perform partial restore simply remove files for objects that you don't want to restore from the restore folder.
 When restoring into a different tenant always make sure that all CSV files are prsent in the restore folder in their corresponding subfolders. This is required to correctly restore references. Referenced objects must have already been restored in the target tenant. 
+
+#Release notes
+
+v1.1
+Added backup of administrative roles and role assignments. Only custom roles are backed up.

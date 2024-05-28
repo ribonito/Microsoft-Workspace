@@ -41,7 +41,9 @@ function Start-SRIntuneBackup() {
     }
 
     Invoke-SRIntuneBackupTenantInfo -Path $Path -ApiVersion v1.0
-	Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile -Path $Path -ApiVersion beta
+	Invoke-SRIntuneBackupAdminRole -Path $Path -ApiVersion beta
+	Invoke-SRIntuneBackupAdminRoleAssignment -Path $Path -ApiVersion beta
+    Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupAppProtectionPolicy -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupAppProtectionPolicyAssignment -Path $Path -ApiVersion beta
     Invoke-SRIntuneBackupAppConfigurationPolicy -Path $Path -ApiVersion beta
