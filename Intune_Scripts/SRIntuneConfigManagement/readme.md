@@ -118,7 +118,6 @@ For restore operations the following delegated permissions must be granted to Mi
 
 #Open issues
 
-- NotificationMessageTemplates - restore is not working
 - Device compliance policies, scheduledActionsForRule - backup / restore not working
 - Restore of win32 apps is not working. Issues with intunewin file commit after uploading
 - windowsAutopilotDeploymentProfiles - restore of assignments is not working. It looks like a bug in MSGraph
@@ -166,3 +165,6 @@ When restoring into a different tenant always make sure that all CSV files are p
 
 v1.1
 Added backup of administrative roles and role assignments. Only custom roles are backed up.
+
+v1.2
+Fixed restore of notification templates

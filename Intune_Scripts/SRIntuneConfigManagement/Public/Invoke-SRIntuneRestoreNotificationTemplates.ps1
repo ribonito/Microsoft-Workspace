@@ -66,29 +66,33 @@ function Invoke-SRIntuneRestoreNotificationTemplates {
             }
         }
 
-        # Remove properties that are not available for creating a new configuration
-        $requestBodyObject.PSObject.Properties | Foreach-Object {
-            if ($null -ne $_.Value) {
-                if ($_.Value.GetType().Name -eq "DateTime") {
-                    $_.Value = (Get-Date -Date $_.Value -Format s) + "Z"
-                }
-            }
-            if ($_.Name -eq "localizedNotificationMessages") {
-                $_.Value = $_.Value | select * -ExcludeProperty id,lastModifiedDateTime
-            }
-        }
-
         # If missing, adds @odata.type property required for restoring configuration.
         if (-not ($requestBodyObject.'@odata.type')) {
             $requestBodyObject | Add-Member -NotePropertyName '@odata.type' -NotePropertyValue "#microsoft.graph.notificationMessageTemplate"
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, lastModifiedDateTime, 'localizedNotificationMessages@odata.context',localizedNotificationMessages,description,roleScopeTagIds | ConvertTo-Json -Depth 100
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,lastModifiedDateTime,'localizedNotificationMessages@odata.context',defaultLocale,localizedNotificationMessages | ConvertTo-Json -Depth 100
         #$requestBody
         # Restore the Device Compliance Policy
         try {
             $Uri = "$ApiVersion/deviceManagement/notificationMessageTemplates"
-            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+            $response = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+            If ($($response.id)) {
+                # restore localized notification messages
+                $requestBodyObject.PSObject.Properties | Foreach-Object {
+#                    $_
+                    if ($_.Name -eq "localizedNotificationMessages") {
+                        Foreach ($locmessage in $_.value) {
+                            $locmessage | Add-Member -NotePropertyName '@odata.type' -NotePropertyValue "#microsoft.graph.localizedNotificationMessage"
+                            $requestBody = $locmessage | Select-Object -Property * -ExcludeProperty id,lastModifiedDateTime | ConvertTo-Json -Depth 100
+                            #$requestBody
+                            $Uri = "$ApiVersion/deviceManagement/notificationMessageTemplates/$($response.id)/localizedNotificationMessages"
+                            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+                        }
+                    }
+                }
+            }
+
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Notification message template"
