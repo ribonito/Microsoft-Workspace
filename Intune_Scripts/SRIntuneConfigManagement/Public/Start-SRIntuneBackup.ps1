@@ -13,9 +13,7 @@ function Start-SRIntuneBackup() {
     Start-SRIntuneBackup -Path C:\temp
 
     .NOTES
-    Requires the MSGraphFunctions PowerShell Module
-
-    Connect to MSGraph first, using the 'Connect-Graph' cmdlet.
+    Requires the Microsoft.Graph.Intune PowerShell Module
     #>
 
     [CmdletBinding()]
@@ -23,6 +21,8 @@ function Start-SRIntuneBackup() {
         [Parameter(Mandatory = $true)]
         [string]$Path
     )
+
+    Import-Module Microsoft.Graph.Intune
 
     Connect-MgGraph -Scopes Policy.Read.All,Policy.Read.ConditionalAccess,Application.Read.All,Group.Read.All,DeviceManagementConfiguration.Read.All,DeviceManagementApps.Read.All,DeviceManagementRBAC.Read.All,DeviceManagementServiceConfig.Read.All -NoWelcome
 

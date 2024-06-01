@@ -13,9 +13,7 @@ function Start-SRIntuneRestoreConfig() {
     Start-SRIntuneRestore -Path C:\temp
     
     .NOTES
-    Requires the MSGraphFunctions PowerShell Module
-
-    Connect to MSGraph first, using the 'Connect-Graph' cmdlet.
+    Requires the Microsoft.Graph.Intune PowerShell Module
     #>
     
     [CmdletBinding()]
@@ -27,7 +25,7 @@ function Start-SRIntuneRestoreConfig() {
     )
 
 
-    #Import-Module Microsoft.Graph.Intune
+    Import-Module Microsoft.Graph.Intune
     #Connect-MSGraph | Out-Null
     Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.Read.All -NoWelcome
 
