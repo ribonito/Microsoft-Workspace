@@ -1,6 +1,8 @@
 param(
     [string]
     $Language = "en-US",
+    [int]
+    $GeoId = 223, #Suisse
     [Parameter()]
     [ValidateSet('Install','Uninstall')]
     [string]
@@ -30,8 +32,11 @@ If ($ENV:PROCESSOR_ARCHITEW6432 -eq "AMD64") {
 $Version = "1.0"
 Start-Transcript -Path "$($env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\LanguageConfig-$Version-$Language-$Action.log"
 
-$Geoid = 223 #Suisse
-$InputLangList = ("en-US","fr-CH","de-CH","it-CH")
+if($Geoid -eq 223){ 
+    $InputLangList = ($Language,"en-US","fr-CH","de-CH","it-CH")
+} else {
+    $InputLangList = ($Language,"en-US")
+}
 try {
     Import-Module -Name LanguagePackManagement
     if ($Action -eq "Install") {
@@ -72,6 +77,6 @@ catch {
     Exit 1
 }
 
-REG add "HKLM\Software\Sunrise\Manage" /v "LanguageConfig" /t REG_SZ /d $Language
+REG add "HKLM\Software\Sunrise\Manage" /v "LanguageConfig" /t REG_SZ /d $Language /f
 Stop-Transcript
 Exit 3010

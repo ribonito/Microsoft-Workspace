@@ -104,7 +104,7 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicy {
         }
 
         $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,'@odata.context',apps@odata.context,deployedAppCount | ConvertTo-Json -Depth 100
-        #$requestBody
+        #$requestBody.toString()
         $Uri = "$ApiVersion/deviceAppManagement/mobileAppConfigurations"
 
         # Restore the App Configuration Policy

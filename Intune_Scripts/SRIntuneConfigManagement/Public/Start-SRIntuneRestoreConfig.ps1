@@ -26,7 +26,6 @@ function Start-SRIntuneRestoreConfig() {
 
 
     Import-Module Microsoft.Graph.Intune
-    #Connect-MSGraph | Out-Null
     Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.Read.All -NoWelcome
 
     # Get source and target tenant details
@@ -55,6 +54,14 @@ function Start-SRIntuneRestoreConfig() {
         If ($Assigments) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"
             $SourceFilters = Import-SRFiltersFromCSV -Path "$Path"
+        }
+
+        $Uri = "v1.0/organization/organization/$($TargetTenant.id)?`$select=mobiledevicemanagementauthority"
+        $mdmAuthority = $(Invoke-MgGraphRequest -Uri $Uri).mobileDeviceManagementAuthority
+
+        if($mdmAuthority -ne "intune"){
+            $Uri = "v1.0/organization/organization/$($TargetTenant.id)/setMobileDeviceManagementAuthority"
+            $null = Invoke-MgGraphRequest -Uri $Uri -Method POST -ErrorAction Stop
         }
     }
 

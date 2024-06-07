@@ -2,7 +2,7 @@
 
 Intune configuration automation is a toolset built using PowerShell scripts with the purpose to allow saving of various configuration objects in an Intune tenant as well as additional information required for restoring the configuration in the same or different Intune tenant. 
 Most of Intune configuration information is exported in a form of JSON files. A small part of configuration data is saved in CSV files. 
-The scripts have modular architecture where functions are combined into a single PowerShell module to facilitate installation and operations.
+The scripts has modular architecture where functions are combined into a single PowerShell module to facilitate installation and operations.
 
 #Module name
 **SRIntuneConfigManagement**
@@ -120,7 +120,6 @@ For restore operations the following delegated permissions must be granted to Mi
 
 - Device compliance policies, scheduledActionsForRule - backup / restore not working
 - Restore of win32 apps is not working. Issues with intunewin file commit after uploading
-- windowsAutopilotDeploymentProfiles - restore of assignments is not working. It looks like a bug in MSGraph
 - Default enrollment configuration objects are not working
 
 #Notes
@@ -168,3 +167,8 @@ Added backup of administrative roles and role assignments. Only custom roles are
 
 v1.2
 Fixed restore of notification templates
+
+v1.3
+Fixed restore of Autopilot profile assignments
+Added setting of mobiledevicemanagementauthority in the tenant
+

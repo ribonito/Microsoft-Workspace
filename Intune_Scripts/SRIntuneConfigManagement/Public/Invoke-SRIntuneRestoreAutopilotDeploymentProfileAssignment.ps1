@@ -68,11 +68,6 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment {
             continue
         }
 
-        # Create the base requestBody
-        $requestBody = @{
-            assignments = @()
-        }
-        
         # Add assignments to restore to the request body
         foreach ($ProfileAssignment in $ProfileAssignments) {
             If (!($SameTenant)) {
@@ -85,29 +80,30 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment {
                     if($groupNameCsv){$TargetGroupId = Get-SRAssignedGroupId -GroupName $groupNameCsv}
                     if($TargetGroupId){$ProfileAssignment.target.groupId = $TargetGroupId}
                 }
-                $requestBody.assignments += @{
-                    "target" = $ProfileAssignment.target | Select-Object -Property * -ExcludeProperty deviceAndAppManagementAssignmentFilterType,deviceAndAppManagementAssignmentFilterId
-                }
             }
-        }
+            # Create the base requestBody
+            $requestBody = @{
+                "target" = $ProfileAssignment.target | Select-Object -Property * -ExcludeProperty deviceAndAppManagementAssignmentFilterType,deviceAndAppManagementAssignmentFilterId
+            }
 
-        # Convert the PowerShell object to JSON
-        $requestBody = $requestBody | ConvertTo-Json -Depth 100
-        $requestbody
-        # Restore the assignments
-        try {
-            $Uri = "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles/$($ProfileObject.Value.id)/assignments"
-            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
-            [PSCustomObject]@{
-                "Action" = "Restore"
-                "Type"   = "Device Configuration Assignments"
-                "Name"   = $ProfileObject.Value.displayName
-                "Path"   = "Autopilot Deployment Profiles\Assignments\$($Profile.Name)"
+            # Convert the PowerShell object to JSON
+            $requestBody = $requestBody | ConvertTo-Json -Depth 100
+            #$requestbody
+            # Restore the assignments
+            try {
+                $Uri = "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles/$($ProfileObject.Value.id)/assignments"
+                $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+            }
+            catch {
+                Write-Verbose "$($ProfileObject.Value.displayName) - Failed to restore Autopilotprofiles Assignment(s)" -Verbose
+                Write-Error $_ -ErrorAction Continue
             }
         }
-        catch {
-            Write-Verbose "$($ProfileObject.Value.displayName) - Failed to restore Autopilotprofiles Assignment(s)" -Verbose
-            Write-Error $_ -ErrorAction Continue
+        [PSCustomObject]@{
+            "Action" = "Restore"
+            "Type"   = "Device Configuration Assignments"
+            "Name"   = $ProfileObject.Value.displayName
+            "Path"   = "Autopilot Deployment Profiles\Assignments\$($Profile.Name)"
         }
     }
 }
