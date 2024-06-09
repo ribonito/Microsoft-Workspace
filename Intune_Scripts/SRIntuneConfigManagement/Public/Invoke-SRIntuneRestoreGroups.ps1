@@ -58,8 +58,8 @@ function Invoke-SRIntuneRestoreGroups {
             }
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,visibility,mail,theme,preferredDataLocation,uniqueName,isManagementRestricted,classification,expirationDateTime,createdDateTime,createdByAppId,serviceProvisioningErrors,renewedDateTime,onPremisesLastSyncDateTime,proxyAddresses,isAssignableToRole,onPremisesProvisioningErrors,onPremisesNetBiosName,resourceProvisioningOptions,preferredLanguage,onPremisesObjectIdentifier,onPremisesSyncEnabled,onPremisesSamAccountName,resourceBehaviorOptions,infoCatalogs,deletedDateTime,organizationId,securityIdentifier,onPremisesDomainName,onPremisesSecurityIdentifier,creationOptions | ConvertTo-Json -Depth 100
-
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,visibility,mail,theme,preferredDataLocation,uniqueName,isManagementRestricted,classification,expirationDateTime,createdDateTime,createdByAppId,serviceProvisioningErrors,renewedDateTime,onPremisesLastSyncDateTime,proxyAddresses,onPremisesProvisioningErrors,onPremisesNetBiosName,resourceProvisioningOptions,preferredLanguage,onPremisesObjectIdentifier,onPremisesSyncEnabled,onPremisesSamAccountName,resourceBehaviorOptions,infoCatalogs,deletedDateTime,organizationId,securityIdentifier,onPremisesDomainName,onPremisesSecurityIdentifier,creationOptions | ConvertTo-Json -Depth 100
+        #$requestBody
         # Restore the device configuration
         try {
             $Uri = "$ApiVersion/groups"
@@ -78,4 +78,4 @@ function Invoke-SRIntuneRestoreGroups {
     }
 }
 
-#Invoke-SRIntuneRestoreGroups -Path "C:\temp\Intunerestore"
+#Invoke-SRIntuneRestoreGroups -Path "C:\temp\intunerestore"

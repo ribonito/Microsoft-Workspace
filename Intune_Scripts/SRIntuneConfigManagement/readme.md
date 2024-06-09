@@ -172,3 +172,6 @@ v1.3
 Fixed restore of Autopilot profile assignments
 Added setting of mobiledevicemanagementauthority in the tenant
 
+v1.4
+added restore of custom Admin Roles
+fixed missing delegated permissions when restoring groups

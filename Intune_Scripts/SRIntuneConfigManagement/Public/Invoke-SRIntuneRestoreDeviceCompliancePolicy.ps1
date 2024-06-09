@@ -44,7 +44,7 @@ function Invoke-SRIntuneRestoreDeviceCompliancePolicy {
     }
 
     # Get all Device Compliance Policies
-    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
+    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies\*" -Include *.json
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName -Raw
         $deviceCompliancePolicyDisplayName = ($deviceCompliancePolicyContent | ConvertFrom-Json).displayName

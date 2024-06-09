@@ -26,7 +26,7 @@ function Start-SRIntuneRestoreConfig() {
 
 
     Import-Module Microsoft.Graph.Intune
-    Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.Read.All -NoWelcome
+    Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.ReadWrite.All,RoleManagement.ReadWrite.Directory -NoWelcome
 
     # Get source and target tenant details
     $Uri = "v1.0/organization?`$select=id,displayname"
@@ -56,17 +56,20 @@ function Start-SRIntuneRestoreConfig() {
             $SourceFilters = Import-SRFiltersFromCSV -Path "$Path"
         }
 
-        $Uri = "v1.0/organization/organization/$($TargetTenant.id)?`$select=mobiledevicemanagementauthority"
+        $Uri = "v1.0/organization/$($TargetTenant.id)?`$select=mobiledevicemanagementauthority"
         $mdmAuthority = $(Invoke-MgGraphRequest -Uri $Uri).mobileDeviceManagementAuthority
+        Write-Output "Mobile Device Management Authority in the tenant is: $mdmAuthority"
 
         if($mdmAuthority -ne "intune"){
-            $Uri = "v1.0/organization/organization/$($TargetTenant.id)/setMobileDeviceManagementAuthority"
+            $Uri = "v1.0/organization/$($TargetTenant.id)/setMobileDeviceManagementAuthority"
             $null = Invoke-MgGraphRequest -Uri $Uri -Method POST -ErrorAction Stop
+            Write-Output "Set Mobile Device Management Authority to Intune"
         }
     }
 
     Invoke-SRIntuneRestoreScopeTags -Path $Path
     Invoke-SRIntuneRestoreGroups -Path $Path
+    Invoke-SRIntuneRestoreAdminRole -Path $Path
     Invoke-SRIntuneRestoreAssignmentFilter -Path $Path
     Invoke-SRIntuneRestoreNotificationTemplates -Path $Path
 	Invoke-SRIntuneRestoreClientApps -Path $Path
