@@ -148,6 +148,7 @@ function Invoke-SRIntuneRestoreAppProtectionPolicyAssignment {
                 Write-Error $_ -ErrorAction Continue
             }
         }
+        Start-Sleep -Seconds 5
     }
 }
 #Invoke-SRIntuneRestoreAppProtectionPolicyAssignment -Path "C:\temp\intunerestore"

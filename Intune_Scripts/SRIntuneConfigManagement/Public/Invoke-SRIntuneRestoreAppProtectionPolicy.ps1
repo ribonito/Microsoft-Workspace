@@ -108,6 +108,7 @@ function Invoke-SRIntuneRestoreAppProtectionPolicy {
             Write-Verbose "$appProtectionPolicyDisplayName - Failed to restore App Protection Policy" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

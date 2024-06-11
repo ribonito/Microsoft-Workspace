@@ -123,6 +123,7 @@ function Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment {
             Write-Verbose "$($deviceComplianceObject.Value.displayName) - Failed to restore Device Configuration Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -100,6 +100,7 @@ function Invoke-SRIntuneRestoreDeviceCompliancePolicy {
             Write-Verbose "$deviceCompliancePolicyDisplayName - Failed to restore Device Compliance Policy" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

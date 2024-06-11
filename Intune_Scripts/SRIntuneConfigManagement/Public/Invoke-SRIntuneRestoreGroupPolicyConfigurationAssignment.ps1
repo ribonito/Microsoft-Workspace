@@ -123,6 +123,7 @@ function Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment {
             Write-Verbose "$($GroupPolicyConfigurationObject.Value.displayName) - Failed to restore Group Policy Configuration Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -93,6 +93,7 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfile {
             Write-Verbose "$ProfileDisplayName - Failed to restore Autopilot policy" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -80,29 +80,29 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment {
         }
         
         # Add assignments to restore to the request body
-        foreach ($appConfigurationPolicyAssignment in $appConfigurationPolicyAssignments) {
+        foreach ($appConfigurationPolicyAssignment in $appConfigurationPolicyAssignments.value) {
             If (!($SameTenant)) {
                 # Replace assignment group IDs in the body with the group id in the target tenant
-                $groupIdJson = $($appConfigurationPolicyAssignment.value.target.groupId)
+                $groupIdJson = $($appConfigurationPolicyAssignment.target.groupId)
                 If ($groupIdJson -ne $null){
                     $groupNameCsv = $null
                     $TargetGroupId = $null
                     $groupNameCsv = ($SourceGroups.GetEnumerator() | Where-Object {$_.Key -eq $groupIdJson}).Value
                     if($groupNameCsv){$TargetGroupId = Get-SRAssignedGroupId -GroupName $groupNameCsv}
-                    if($TargetGroupId){$appConfigurationPolicyAssignment.value.target.groupId = $TargetGroupId}
+                    if($TargetGroupId){$appConfigurationPolicyAssignment.target.groupId = $TargetGroupId}
                 }
                # Replace assignment filter IDs in the body with the filter id in the target tenant
-                $filterIdJson = $($appConfigurationPolicyAssignment.value.target.deviceAndAppManagementAssignmentFilterId)
+                $filterIdJson = $($appConfigurationPolicyAssignment.target.deviceAndAppManagementAssignmentFilterId)
                 If($filterIdJson -ne $null){
                     $filterNameCsv = $null
                     $TargetFilterId = $null
                     $filterNameCsv = ($SourceFilters.GetEnumerator() | Where-Object {$_.Key -eq $filterIdJson}).Value
                     if($filterNameCsv){$TargetFilterId = Get-SRAssignedFilterId -FilterName $filterNameCsv}
-                    if($TargetFilterId){$appConfigurationPolicyAssignment.value.target.deviceAndAppManagementAssignmentFilterId = $TargetFilterId}
+                    if($TargetFilterId){$appConfigurationPolicyAssignment.target.deviceAndAppManagementAssignmentFilterId = $TargetFilterId}
                 }
             }
             $requestBody.assignments += @{
-                "target"   = $appConfigurationPolicyAssignment.value.target | Select-Object -Property * #-ExcludeProperty deviceAndAppManagementAssignmentFilterId, deviceAndAppManagementAssignmentFilterType
+                "target" = $appConfigurationPolicyAssignment.target | Select-Object -Property * #-ExcludeProperty id #deviceAndAppManagementAssignmentFilterId, deviceAndAppManagementAssignmentFilterType
             }
         }
 
@@ -130,6 +130,7 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment {
                 Write-Error $_ -ErrorAction Continue
             }
         }
+        Start-Sleep -Seconds 5
     }
 }
-#Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment -Path "C:\temp\intunerestore"
+#Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment -Path "C:\temp\RestoreTemplate\Mobile"

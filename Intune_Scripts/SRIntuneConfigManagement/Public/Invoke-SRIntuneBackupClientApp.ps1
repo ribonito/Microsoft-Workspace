@@ -28,7 +28,7 @@ function Invoke-SRIntuneBackupClientApp {
         $null = New-Item -Path "$Path\Client Apps" -ItemType Directory
     }
 
-    $appIDs = @{}
+    $appIDs = @()
     # Get all Client Apps
     $Uri = "$ApiVersion/deviceAppManagement/mobileApps?$filter=(microsoft.graph.managedApp/appAvailability%20eq%20null%20or%20microsoft.graph.managedApp/appAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)"
     $clientApps = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
@@ -40,8 +40,14 @@ function Invoke-SRIntuneBackupClientApp {
         $Uri = "$ApiVersion/deviceAppManagement/mobileApps/$($clientApp.id)"
         $clientAppDetails = Invoke-MgGraphRequest -Uri $Uri 
         $clientAppDetails | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json"
-        #Store group name and id in a hash table
-        $appIDs.Add($clientApp.id, $clientApp.displayName)
+
+        #Store group name, type and id in a hash table
+        #$data = (Get-ADUser -Filter * | select GivenName, SamAccountName, ObjectGUID)  
+        $row = "" | Select-Object id,type,name
+        $row.id = $clientApp.id
+        $row.type = $clientApp.'@odata.type'  
+        $row.name = $clientApp.displayName
+        $appIDs += $row  
 
         [PSCustomObject]@{
             "Action" = "Backup"
@@ -51,7 +57,7 @@ function Invoke-SRIntuneBackupClientApp {
         }
     }
     #Store group hash table in a CSV file
-    $appIDs.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\Client Apps\AppIDs.csv" -NoTypeInformation
+    $appIDs | Export-CSV -path "$Path\Client Apps\AppIDs.csv" -NoTypeInformation -Encoding UTF8
 }
 
 #Invoke-SRIntuneBackupClientApp -Path "C:\temp\IntuneBackup\FunctionTest"

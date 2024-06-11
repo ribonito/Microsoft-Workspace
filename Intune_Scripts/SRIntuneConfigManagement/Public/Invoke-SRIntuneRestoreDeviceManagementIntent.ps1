@@ -44,7 +44,7 @@ function Invoke-SRIntuneRestoreDeviceManagementIntent {
     }
 
     # Get all device management intents
-    $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents" -Recurse -File
+    $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents\*" -Include *.json
     foreach ($deviceManagementIntent in $deviceManagementIntents) {
         $deviceManagementIntentContent = Get-Content -LiteralPath $deviceManagementIntent.FullName -Raw
         $deviceManagementIntentDisplayName = ($deviceManagementIntentContent | ConvertFrom-Json).displayName
@@ -84,6 +84,7 @@ function Invoke-SRIntuneRestoreDeviceManagementIntent {
             Write-Verbose "$deviceManagementIntentDisplayName - Failed to restore Device Management Intent ($templateDisplayName)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -83,6 +83,7 @@ function Invoke-SRIntuneRestoreDeviceHealthScript {
             Write-Verbose "$deviceHealthScriptDisplayName - Failed to restore Device Health Script" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

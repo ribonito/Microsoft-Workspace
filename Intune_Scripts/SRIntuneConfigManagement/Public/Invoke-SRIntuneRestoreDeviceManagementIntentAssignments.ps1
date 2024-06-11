@@ -122,6 +122,7 @@ function Invoke-SRIntuneRestoreDeviceManagementIntentAssignments {
             Write-Verbose "$($managementIntentObject.Value.displayName) - Failed to restore Device Management Intent Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

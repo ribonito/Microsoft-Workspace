@@ -92,6 +92,7 @@ function Invoke-SRIntuneRestoreWindowsDriverUpdateProfile {
             Write-Verbose "$driverUpdateProfileDisplayName - Failed to restore Windows Driver Update Profile" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -86,6 +86,7 @@ function Invoke-SRIntuneRestoreGroupPolicyConfiguration {
             Write-Verbose "$($groupPolicyConfiguration.BaseName) - Failed to restore Group Policy Configuration and/or (one or more) Settings" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

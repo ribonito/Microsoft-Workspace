@@ -17,7 +17,8 @@
     param(
         [Parameter(Mandatory = $true)]
         [string]$AppName,
-
+        [Parameter(Mandatory = $true)]
+        [string]$AppType,
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
@@ -27,8 +28,8 @@
 
     # Get the group id passing the name
     $Uri = "$ApiVersion/deviceAppManagement/mobileApps$QueryFilter"
-    $AppId = $($(Invoke-MgGraphRequest -Uri $Uri).Value | Where-Object {$_.displayName -eq $AppName}).id
-    Return $ScopeTagId
+    $AppId = $($(Invoke-MgGraphRequest -Uri $Uri).Value | Where-Object {$_.displayName -eq $AppName -and $_.'@odata.type' -eq $AppType}).id
+    Return $AppId
 }
 
-#Get-SRScopeTagId -AppName "SRMW"
+#Get-SRAppId -AppName "Microsoft Word" -AppType "#microsoft.graph.managedIOSStoreApp"

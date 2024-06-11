@@ -23,8 +23,6 @@ function Import-SRAppsFromCSV {
         [string]$ApiVersion = "Beta"
     )
 
-    $Apps = @{}
-
     # Check if csv file exists
     $CSVFile = "$Path\Client Apps\AppIDs.csv"
     if (-not (Test-Path "$CSVFile")) {
@@ -33,12 +31,7 @@ function Import-SRAppsFromCSV {
     } else {
 
     $CsvContent = Import-Csv -Path $CSVFile
-    foreach($Row in $CsvContent)
-    {
-        $Apps[$row.Key]=$Row.Value
-    }
-
-    Return $Apps
+    Return $CsvContent
     }
 }
 

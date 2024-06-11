@@ -61,6 +61,7 @@ function Invoke-SRIntuneRestoreScopeTags {
             Write-Verbose "$ProfileDisplayName - Failed to restore scope tag" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

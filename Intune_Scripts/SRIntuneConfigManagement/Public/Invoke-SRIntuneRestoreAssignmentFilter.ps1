@@ -93,6 +93,7 @@ function Invoke-SRIntuneRestoreAssignmentFilter {
             Write-Verbose "$ProfileDisplayName - Failed to restore Assignment filter" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -105,6 +105,7 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment {
             "Name"   = $ProfileObject.Value.displayName
             "Path"   = "Autopilot Deployment Profiles\Assignments\$($Profile.Name)"
         }
+        Start-Sleep -Seconds 5
     }
 }
 

@@ -99,6 +99,7 @@ function Invoke-SRIntuneRestoreBrandingProfiles {
             Write-Verbose "$ProfileDisplayName - Failed to restore Branding Profile" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

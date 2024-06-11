@@ -57,14 +57,20 @@ function Invoke-SRIntuneRestoreClientAppAssignment {
     foreach ($app in $apps) {
         $appAssignments = Get-Content -LiteralPath $app.FullName | ConvertFrom-Json
         $appName = ($($app.BaseName -split("__"))[1])
-
+        $appName = $appName.replace("_",":")
+        $appType = "#microsoft.graph.$($($app.BaseName -split("__"))[0])"
         # Get the object we are restoring the assignments for
         try {
             $Uri = "$ApiVersion/deviceAppManagement/mobileApps?`$filter=displayName eq '$appName'&`$select=id,displayName"
-            $appObject = Invoke-MgGraphRequest -Uri $Uri
-            if (-not ($appObject.Value)) {
+            $appObjectCol = Invoke-MgGraphRequest -Uri $Uri
+            if (-not ($appObjectCol.Value)) {
                 Write-Warning "Error retrieving Client app for $appName. Skipping assignment restore"
                 continue
+            } else {
+                $appID = $null
+                foreach($appObj in $appObjectCol.Value){
+                    if($($appObj.'@odata.type') -eq $appType){$appID = $($appObj.id)}
+                }
             }
         }
         catch {
@@ -113,19 +119,20 @@ function Invoke-SRIntuneRestoreClientAppAssignment {
 
         # Restore the assignments
         try {
-            $Uri = "$ApiVersion/deviceAppManagement/mobileApps/$($appObject.Value.id)/assign"
+            $Uri = "$ApiVersion/deviceAppManagement/mobileApps/$appID/assign"
             $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Client app Assignments"
-                "Name"   = $appObject.Value.displayName
+                "Name"   = $app.Name
                 "Path"   = "Device Configurations\Assignments\$($app.Name)"
             }
         }
         catch {
-            Write-Verbose "$($appObject.Value.displayName) - Failed to restore App Assignment(s)" -Verbose
+            Write-Verbose "$($app.Name) - Failed to restore App Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

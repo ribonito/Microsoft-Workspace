@@ -106,6 +106,7 @@ function Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments {
             Write-Verbose "$($FeatureUpdateProfileObject.Value.displayName) - Failed to restore Windows Feature Update Profile assignments" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

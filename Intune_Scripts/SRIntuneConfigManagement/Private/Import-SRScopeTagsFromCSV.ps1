@@ -28,8 +28,8 @@ function Import-SRSScopeTagsFromCSV {
     # Check if csv file exists
     $CSVFile = "$Path\Scope tags\ScopeTags.csv"
     if (-not (Test-Path "$CSVFile")) {
-        Write-Output "Filter reference file $CSVFile wasn't found. We cannot continue."
-        Return "Error"
+        Write-Warning "Filter reference file $CSVFile wasn't found. We cannot continue."
+        Return $null
     } else {
 
     $CsvContent = Import-Csv -Path $CSVFile

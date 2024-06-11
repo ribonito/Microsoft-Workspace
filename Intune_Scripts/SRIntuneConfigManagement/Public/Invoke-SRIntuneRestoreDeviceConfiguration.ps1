@@ -92,6 +92,7 @@ function Invoke-SRIntuneRestoreDeviceConfiguration {
             Write-Verbose "$deviceConfigurationDisplayName - Failed to restore Device Configuration" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

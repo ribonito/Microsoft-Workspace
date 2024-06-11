@@ -43,6 +43,11 @@ function Invoke-SRIntuneRestoreNotificationTemplates {
     $SourceScopeTags = Import-SRSScopeTagsFromCSV -Path "$Path"
     }
 
+    if(!$SourceScopeTags){
+    Write-Warning "File $Path wasn't found. Cannot restore Notification templates"
+    Return
+    }
+
     # Get all notification templates
     $Templates = Get-ChildItem -Path "$Path\Notification templates\*" -Include *.json
     foreach ($Template in $Templates) {
@@ -104,7 +109,8 @@ function Invoke-SRIntuneRestoreNotificationTemplates {
             Write-Verbose "$TemplateDisplayName - Failed to restore Notification message template" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 
-#Invoke-SRIntuneRestoreNotificationTemplates -Path "C:\temp\Intunerestore"
+#Invoke-SRIntuneRestoreNotificationTemplates -Path "C:\temp\RestoreTemplate\WinRegular"

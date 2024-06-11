@@ -110,6 +110,7 @@ function Invoke-SRIntuneRestoreDeviceManagementScriptAssignment {
             Write-Verbose "$($deviceConfigurationObject.Value.displayName) - Failed to restore Device Management Script Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

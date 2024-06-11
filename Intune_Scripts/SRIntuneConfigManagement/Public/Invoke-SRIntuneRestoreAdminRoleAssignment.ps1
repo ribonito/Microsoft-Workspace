@@ -123,6 +123,7 @@ function Invoke-SRIntuneRestoreAdminRoleAssignment {
             Write-Verbose "$($adminRoleObject.Value.displayName) - Failed to restore Device Configuration Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

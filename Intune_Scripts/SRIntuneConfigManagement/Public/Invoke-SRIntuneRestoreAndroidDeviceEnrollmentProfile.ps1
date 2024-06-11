@@ -114,6 +114,7 @@ function Invoke-SRIntuneRestoreAndroidDeviceEnrollmentProfile {
             Write-Verbose "$ProfileDisplayName - Failed to restore Android Device Enrollment Profile" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

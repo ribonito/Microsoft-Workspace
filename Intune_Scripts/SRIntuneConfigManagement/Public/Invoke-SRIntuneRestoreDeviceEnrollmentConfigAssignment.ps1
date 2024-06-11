@@ -122,6 +122,7 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment {
             Write-Verbose "$($EnrollmentConfigObject.Value.displayName) - Failed to restore Device Enrollment Configuration Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

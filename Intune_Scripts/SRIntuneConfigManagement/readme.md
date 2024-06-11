@@ -114,7 +114,11 @@ For restore operations the following delegated permissions must be granted to Mi
 - DeviceManagementServiceConfig.ReadWrite.All
 - Group.ReadWrite.All
 - GroupMember.ReadWrite.All
-- Directory.Read.All
+- Directory.ReadWrite.All
+- RoleManagement.ReadWrite.Directory
+- Policy.Read.All
+- Policy.ReadWrite.ConditionalAccess
+- Application.ReadWrite.All
 
 #Open issues
 
@@ -175,3 +179,8 @@ Added setting of mobiledevicemanagementauthority in the tenant
 v1.4
 added restore of custom Admin Roles
 fixed missing delegated permissions when restoring groups
+
+v1.5
+bugfixes
+Added restore of settings catalog policies and assignments
+Added creation of missing service principles referenced in Conditinoal Access policies

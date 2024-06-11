@@ -92,6 +92,7 @@ function Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile {
             Write-Verbose "$FeatureUpdateProfileDisplayName - Failed to restore Windows Feature Update Profile" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

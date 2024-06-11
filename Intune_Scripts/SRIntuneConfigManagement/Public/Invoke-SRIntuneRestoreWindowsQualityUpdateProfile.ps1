@@ -84,6 +84,7 @@ function Invoke-SRIntuneRestoreWindowsQualityUpdateProfile {
             Write-Verbose "$QualityUpdateProfileDisplayName - Failed to restore Windows Quality Update Profile" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

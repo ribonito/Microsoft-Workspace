@@ -26,7 +26,7 @@ function Start-SRIntuneRestoreConfig() {
 
 
     Import-Module Microsoft.Graph.Intune
-    Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.ReadWrite.All,RoleManagement.ReadWrite.Directory -NoWelcome
+    Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.ReadWrite.All,RoleManagement.ReadWrite.Directory,Policy.Read.All,Policy.ReadWrite.ConditionalAccess,Application.ReadWrite.All -NoWelcome
 
     # Get source and target tenant details
     $Uri = "v1.0/organization?`$select=id,displayname"
@@ -80,6 +80,7 @@ function Start-SRIntuneRestoreConfig() {
 	Invoke-SRIntuneRestoreBrandingProfiles -Path $Path
 	Invoke-SRIntuneRestoreAppConfigurationPolicy -Path $Path
 	Invoke-SRIntuneRestoreConditionalAccessPolicy -Path $Path
+    Invoke-SRIntuneRestoreConfigurationPolicy -Path $Path
 	Invoke-SRIntuneRestoreDeviceCompliancePolicy -Path $Path
 	Invoke-SRIntuneRestoreDeviceConfiguration -Path $Path
 	Invoke-SRIntuneRestoreDeviceEnrollmentConfig -Path $Path
@@ -97,6 +98,7 @@ function Start-SRIntuneRestoreConfig() {
     	Invoke-SRIntuneRestoreBrandingProfilesAssignments -Path $Path
 	    Invoke-SRIntuneRestoreClientAppAssignment -Path $Path
         Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment -Path $Path
+        Invoke-SRIntuneRestoreConfigurationPolicyAssignment -Path $Path
     	Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment -Path $Path
 	    Invoke-SRIntuneRestoreDeviceConfigurationAssignment -Path $Path
     	Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment -Path $Path

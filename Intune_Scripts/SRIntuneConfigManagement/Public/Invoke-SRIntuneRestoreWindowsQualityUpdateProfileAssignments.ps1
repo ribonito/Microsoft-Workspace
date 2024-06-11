@@ -106,6 +106,7 @@ function Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments {
             Write-Verbose "$($QualityUpdateProfileObject.Value.displayName) - Failed to restore Windows Quality Update Profile assignments" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

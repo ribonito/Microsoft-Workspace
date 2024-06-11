@@ -26,6 +26,8 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicy {
         [Parameter(Mandatory = $false)]
         [hashtable]$SourceScopeTags,
         [Parameter(Mandatory = $false)]
+        $SourceApps,
+        [Parameter(Mandatory = $false)]
         [boolean]$SameTenant = $false,
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
@@ -45,7 +47,7 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicy {
     If (-not $SourceApps) {
         $SourceApps = Import-SRAppsFromCSV -Path "$Path"
     }
-
+    
     # Get all App Configuration Policies
     $appConfigurationPolicies = Get-ChildItem -Path "$path\App Configuration Policies\*" -Include *.json
     
@@ -75,15 +77,14 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicy {
         }
 
         if ($requestBodyObject.targetedMobileApps -and -not($SameTenant)) {
-
             $i = 0
             foreach ($appIDJson in $requestBodyObject.targetedMobileApps) {
                 if($appIDJson -ne "0"){
                     # Replace scope tag IDs in the json with the ids in the target tenant based on scope name
-                    $appNameCsv = $null
+                    $appCsv = $null
                     $TargetAppId = $null
-                    $appNameCsv = ($SourceApps.GetEnumerator() | Where-Object {$_.Name -eq $appIDJson}).Value
-                    if($appNameCsv){$TargetAppId = Get-SRAppId -AppName $appNameCsv}
+                    $appCsv = $SourceApps | Select-Object -Property id,type,name | Where-Object {$_.id -eq $appIDJson}
+                    if($appCsv){$TargetAppId = Get-SRAppId -AppName $($appCsv.name) -AppType $($appCsv.type)}
                     if($TargetAppId){$requestBodyObject.targetedMobileApps[$i] = $TargetAppId}
                 }
                 $i = $i+1
@@ -104,7 +105,7 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicy {
         }
 
         $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,version,'@odata.context',apps@odata.context,deployedAppCount | ConvertTo-Json -Depth 100
-        #$requestBody.toString()
+        #$requestBody
         $Uri = "$ApiVersion/deviceAppManagement/mobileAppConfigurations"
 
         # Restore the App Configuration Policy
@@ -122,7 +123,8 @@ function Invoke-SRIntuneRestoreAppConfigurationPolicy {
             Write-Verbose "$appConfigurationPolicyDisplayName - Failed to restore App Configuration Policy" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 
-#Invoke-SRIntuneRestoreAppConfigurationPolicy -Path "C:\temp\Intunerestore"
+#Invoke-SRIntuneRestoreAppConfigurationPolicy -Path "C:\temp\RestoreTemplate\Mobile"

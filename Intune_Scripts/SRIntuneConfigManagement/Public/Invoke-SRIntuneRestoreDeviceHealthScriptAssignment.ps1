@@ -125,6 +125,7 @@ function Invoke-SRIntuneRestoreDeviceHealthScriptAssignment {
             Write-Verbose "$($deviceHealthScriptObject.Value.displayName) - Failed to restore Device Health Script Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

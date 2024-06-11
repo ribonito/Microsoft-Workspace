@@ -72,8 +72,46 @@ function Invoke-SRIntuneRestoreConditionalAccessPolicy {
             }
         }
 
+        # Check if service proncipals referenced in the policy exist and try to create them if they don't
+        foreach ($appId in $($requestBodyObject.conditions.applications.excludeApplications)){
+            if($appId -ne "All" -and $appId -ne "Office365"){
+                $Uri = "$ApiVersion/servicePrincipals?`$filter=appId eq '$appId'"
+                $result = Invoke-MgGraphRequest -Uri $Uri -ErrorAction Stop
+                if (-not $($result.value.appid)) {
+                    $Uri = "$ApiVersion/servicePrincipals"
+                    $requestBody = "{""appId"": ""$appId""}"
+                    $result = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+
+                    [PSCustomObject]@{
+                        "Action" = "Create"
+                        "Type"   = "Service principal"
+                        "ID"     = $appId
+                        "Name"   = "$($result.appDisplayName)"
+                    }
+                }
+            }
+        }
+        foreach ($appId in $($requestBodyObject.conditions.applications.includeApplications)){
+            if($appId -ne "All"){
+                $Uri = "$ApiVersion/servicePrincipals?`$filter=appId eq '$appId'"
+                $result = Invoke-MgGraphRequest -Uri $Uri -ErrorAction Stop
+                if (-not $($result.value.appid)) {
+                    $Uri = "$ApiVersion/servicePrincipals"
+                    $requestBody = "{""appId"": ""$appId""}"
+                    $result = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+
+                    [PSCustomObject]@{
+                        "Action" = "Create"
+                        "Type"   = "Service principal"
+                        "ID"     = $appId
+                        "Name"   = "$($result.appDisplayName)"
+                    }
+                }
+            }
+        }
+
         # Remove properties that are not available for creating a new CA policy
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,modifiedDateTime | ConvertTo-Json -Depth 100
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,modifiedDateTime,templateid,grantControls.'authenticationStrength@odata.context' | ConvertTo-Json -Depth 100
         #$requestBody
         $Uri = "$ApiVersion/identity/conditionalAccess/policies"
         # Restore the App Protection Policy
@@ -91,6 +129,7 @@ function Invoke-SRIntuneRestoreConditionalAccessPolicy {
             Write-Verbose "$caPolicyDisplayName - Failed to restore Conditional Access Policy" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

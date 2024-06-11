@@ -67,7 +67,7 @@ function Invoke-SRIntuneRestoreDeviceManagementScript {
         }
 
         $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json
-        $requestBody
+        #$requestBody
         # Restore the device management script
         try {
             $Uri = "$ApiVersion/deviceManagement/deviceManagementScripts"
@@ -83,6 +83,7 @@ function Invoke-SRIntuneRestoreDeviceManagementScript {
             Write-Verbose "$deviceManagementScriptDisplayName - Failed to restore Device Management Script" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
+        Start-Sleep -Seconds 5
     }
 }
 

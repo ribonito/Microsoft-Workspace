@@ -71,7 +71,7 @@ function Invoke-SRIntuneRestoreClientApps {
             }
 
             $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id,createdDateTime,lastModifiedDateTime,'@odata.context',uploadState,publishingState,usedLicenseCount,totalLicenseCount,productKey,licenseType,packageIdentityName,isAssigned,supersededAppCount,dependentAppCount,supersedingAppCount,appAvailability | ConvertTo-Json -Depth 100
-            $requestbody
+            #$requestbody
             # Restore the Device Compliance Policy
             try {
                 $Uri = "$ApiVersion/deviceAppManagement/mobileApps"
@@ -88,6 +88,7 @@ function Invoke-SRIntuneRestoreClientApps {
                 Write-Error $_ -ErrorAction Continue
             }
         }
+        Start-Sleep -Seconds 5
     }
 }
 

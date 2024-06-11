@@ -56,7 +56,6 @@ function Invoke-SRIntuneRestoreBrandingProfilesAssignments {
         # Get the Branding profiles we are restoring the assignments for
         try {
             $Uri = "$ApiVersion/deviceManagement/intuneBrandingProfiles?`$filter=profileName eq '$BrandingProfileName'&`$select=id,profileName"
-            write-host $uri
             $BrandingProfileObject = Invoke-MgGraphRequest -Uri $Uri
             if (-not ($BrandingProfileObject.Value)) {
                 Write-Warning "Error retrieving Branding profiles for $BrandingProfileObject. Skipping assignment restore"
@@ -110,6 +109,7 @@ function Invoke-SRIntuneRestoreBrandingProfilesAssignments {
             Write-Error $_ -ErrorAction Continue
         }
     }
+        Start-Sleep -Seconds 5
     }
 }
 
