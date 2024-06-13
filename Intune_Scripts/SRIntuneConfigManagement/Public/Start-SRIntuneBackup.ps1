@@ -19,16 +19,25 @@ function Start-SRIntuneBackup() {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+        [Parameter(Mandatory = $false)]
+        [string]$tenantId
     )
 
     Import-Module Microsoft.Graph.Intune
+    if($tenantID){
+    Connect-MgGraph -TenantID $tenantID -Scopes Policy.Read.All,Policy.Read.ConditionalAccess,Application.Read.All,Group.Read.All,DeviceManagementConfiguration.Read.All,DeviceManagementApps.Read.All,DeviceManagementRBAC.Read.All,DeviceManagementServiceConfig.Read.All
+    } else {
+    Connect-MgGraph -Scopes Policy.Read.All,Policy.Read.ConditionalAccess,Application.Read.All,Group.Read.All,DeviceManagementConfiguration.Read.All,DeviceManagementApps.Read.All,DeviceManagementRBAC.Read.All,DeviceManagementServiceConfig.Read.All
+    }
 
-    Connect-MgGraph -Scopes Policy.Read.All,Policy.Read.ConditionalAccess,Application.Read.All,Group.Read.All,DeviceManagementConfiguration.Read.All,DeviceManagementApps.Read.All,DeviceManagementRBAC.Read.All,DeviceManagementServiceConfig.Read.All -NoWelcome
+    #Connect-MgGraph -Scopes Policy.Read.All,Policy.Read.ConditionalAccess,Application.Read.All,Group.Read.All,DeviceManagementConfiguration.Read.All,DeviceManagementApps.Read.All,DeviceManagementRBAC.Read.All,DeviceManagementServiceConfig.Read.All -NoWelcome
 
     # Get tenant details
     $Uri = "v1.0/organization?`$select=id,displayname"
     $Org = $(Invoke-MgGraphRequest -Uri $Uri).Value
+
+    Write-output "Tenant ID: $($Org.id), Tenant name: $($Org.displayname)"
 
     $TimeStamp = $ts = Get-Date -f "yyyyMMddHHmm"
     $Path = "$Path\$(($Org.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_')_$($Org.id)_$TimeStamp"
@@ -81,4 +90,6 @@ function Start-SRIntuneBackup() {
 	Invoke-SRIntuneBackupWindowsFeatureUpdateProfileAssignments -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupWindowsQualityUpdateProfile -Path $Path -ApiVersion beta
 	Invoke-SRIntuneBackupWindowsQualityUpdateProfileAssignments -Path $Path -ApiVersion beta
+
+    Disconnect-MgGraph
 }

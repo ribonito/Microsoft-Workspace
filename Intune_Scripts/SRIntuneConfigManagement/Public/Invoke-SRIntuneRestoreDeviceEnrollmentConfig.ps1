@@ -66,11 +66,18 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfig {
             }
         }
 
+        $configType = "$($($EnrollmentConfig.BaseName -split("_"))[0])"
+        if ($configType -eq "appleUserInitiatedEnrollmentProfiles"){
+            $Uri = "$ApiVersion/deviceManagement/appleUserInitiatedEnrollmentProfiles"
+        } else {
+            $Uri = "$ApiVersion/deviceManagement/deviceEnrollmentConfigurations"
+        }
+
         $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json -Depth 100
         #$requestBody
         # Restore the Device Enrollment Configuration
         try {
-            $Uri = "$ApiVersion/deviceManagement/deviceEnrollmentConfigurations"
+            
             $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"

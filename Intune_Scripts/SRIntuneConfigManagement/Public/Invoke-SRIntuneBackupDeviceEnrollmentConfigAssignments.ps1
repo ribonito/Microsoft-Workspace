@@ -50,6 +50,28 @@
             }
         }
     }
+
+    # Get iOS Enrollment configuration assigments
+    $Uri = "$ApiVersion/deviceManagement/appleUserInitiatedEnrollmentProfiles"
+    $eConfigs = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+
+    foreach ($eConfig in $eConfigs) {
+        $eConfigType = "appleUserInitiatedEnrollmentProfiles"
+        $Uri = "$ApiVersion/deviceManagement/appleUserInitiatedEnrollmentProfiles/$($eConfig.id)/assignments"
+        $assignments = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+
+        if ($assignments) {
+            $fileName = ($eConfig.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($eConfigType)__$($fileName).json"
+
+            [PSCustomObject]@{
+                "Action" = "Backup"
+                "Type"   = "Device Enrolment configuration assignment"
+                "Name"   = $eConfig.displayName
+                "Path"   = "$Subfolder\$($eConfigType)_$($fileName).json"
+            }
+        }
+    }
 }
 
 #Invoke-SRIntuneBackupDeviceEnrollmentConfigAssignments -Path "C:\temp\IntuneBackup\FunctionTest"

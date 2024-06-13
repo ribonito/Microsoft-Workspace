@@ -57,10 +57,15 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment {
     foreach ($EnrollmentConfig in $EnrollmentConfigs) {
         $EnrollmentConfigAssignments = Get-Content -LiteralPath $EnrollmentConfig.FullName | ConvertFrom-Json
         $EnrollmentConfigName = ($($EnrollmentConfig.BaseName -split("__"))[1])
+        $EnrollmentConfigType = ($($EnrollmentConfig.BaseName -split("__"))[0])
 
         # Get the object we are restoring the assignments for
-        try {
+        if ($EnrollmentConfigType -eq "appleUserInitiatedEnrollmentProfiles"){
+            $Uri = "$ApiVersion/deviceManagement/appleUserInitiatedEnrollmentProfiles?`$filter=displayName eq '$EnrollmentConfigName'&`$select=id,displayName"
+        } else {
             $Uri = "$ApiVersion/deviceManagement/deviceEnrollmentConfigurations?`$filter=displayName eq '$EnrollmentConfigName'&`$select=id,displayName"
+        }
+        try {            
             $EnrollmentConfigObject = Invoke-MgGraphRequest -Uri $Uri
             if (-not ($EnrollmentConfigObject.Value)) {
                 Write-Warning "Error retrieving Device Enrollment Configuration for $EnrollmentConfigName. Skipping assignment restore"
@@ -73,10 +78,6 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment {
             continue
         }
 
-        # Create the base requestBody
-        $requestBody = @{
-            enrollmentConfigurationAssignments = @()
-        }
         # Add assignments to restore to the request body
         foreach ($EnrollmentConfigAssignment in $EnrollmentConfigAssignments) {
             If (!($SameTenant)) {
@@ -99,8 +100,23 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment {
                     if($TargetFilterId){$EnrollmentConfigAssignment.target.deviceAndAppManagementAssignmentFilterId = $TargetFilterId}
                 }
             }
-            $requestBody.enrollmentConfigurationAssignments += @{
-                "target" = $EnrollmentConfigAssignment.target
+
+            if ($EnrollmentConfigType -eq "appleUserInitiatedEnrollmentProfiles"){
+                # Create the base requestBody
+                $requestBody = @{}
+                $requestBody += @{
+                    "target" = $EnrollmentConfigAssignment.target
+                }
+                $Uri = "$ApiVersion/deviceManagement/appleUserInitiatedEnrollmentProfiles/$($EnrollmentConfigObject.Value.id)/assignments"
+            } else {
+                # Create the base requestBody
+                $requestBody = @{
+                    enrollmentConfigurationAssignments = @()
+                }
+                $requestBody.enrollmentConfigurationAssignments += @{
+                    "target" = $EnrollmentConfigAssignment.target
+                }
+                $Uri = "$ApiVersion/deviceManagement/deviceEnrollmentConfigurations/$($EnrollmentConfigObject.Value.id)/assign"
             }
         }
 
@@ -109,7 +125,6 @@ function Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment {
         #$requestBody
         # Restore the assignments
         try {
-            $Uri = "$ApiVersion/deviceManagement/deviceEnrollmentConfigurations/$($EnrollmentConfigObject.Value.id)/assign"
             $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"

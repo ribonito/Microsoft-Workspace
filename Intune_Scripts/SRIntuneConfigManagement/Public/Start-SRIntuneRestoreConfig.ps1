@@ -21,12 +21,18 @@ function Start-SRIntuneRestoreConfig() {
         [Parameter(Mandatory = $true)]
         [string]$Path,
         [Parameter(Mandatory = $false)]
-        [switch]$Assigments
+        [switch]$Assigments,
+        [Parameter(Mandatory = $false)]
+        [string]$tenantId
     )
 
 
     Import-Module Microsoft.Graph.Intune
-    Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.ReadWrite.All,RoleManagement.ReadWrite.Directory,Policy.Read.All,Policy.ReadWrite.ConditionalAccess,Application.ReadWrite.All -NoWelcome
+    if($tenantID){
+    Connect-MgGraph -TenantID $tenantID -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.ReadWrite.All,RoleManagement.ReadWrite.Directory,Policy.Read.All,Policy.ReadWrite.ConditionalAccess,Application.ReadWrite.All
+    } else {
+    Connect-MgGraph -Scopes DeviceManagementManagedDevices.PrivilegedOperations.All,DeviceManagementManagedDevices.ReadWrite.All,DeviceManagementRBAC.ReadWrite.All,DeviceManagementApps.ReadWrite.All,DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,Group.ReadWrite.All,GroupMember.ReadWrite.All,Directory.ReadWrite.All,RoleManagement.ReadWrite.Directory,Policy.Read.All,Policy.ReadWrite.ConditionalAccess,Application.ReadWrite.All
+    }
 
     # Get source and target tenant details
     $Uri = "v1.0/organization?`$select=id,displayname"
@@ -110,6 +116,7 @@ function Start-SRIntuneRestoreConfig() {
 	    Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments -Path $Path
 	    Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments -Path $Path
     }
+    Disconnect-MgGraph
 }
 
 #Start-SRIntuneRestoreConfig -Path C:\temp\intunerestore -Assigments

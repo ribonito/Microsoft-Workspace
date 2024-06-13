@@ -46,6 +46,25 @@
             "Path"   = "$Subfolder\$($eConfigType)_$($fileName).json"
         }
     }
+
+    # Get all iOS enrollment configurations
+    $Uri = "$ApiVersion/deviceManagement/appleUserInitiatedEnrollmentProfiles"
+    $eConfigs = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+
+    foreach ($eConfig in $eConfigs) {
+        $eConfigType = "appleUserInitiatedEnrollmentProfiles"
+
+        $fileName = ($eConfig.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $eConfig | ConvertTo-Json | Out-File -LiteralPath "$path\$Subfolder\$($eConfigType)_$($fileName).json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Device Enrolment"
+            "Name"   = $eConfig.displayName
+            "Path"   = "$Subfolder\$($eConfigType)_$($fileName).json"
+        }
+    }
+
 }
 
 #Invoke-SRIntuneBackupDeviceEnrollmentConfig -Path "C:\temp\IntuneBackup\FunctionTest"
