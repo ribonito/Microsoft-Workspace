@@ -81,9 +81,28 @@ function Invoke-SRIntuneRestoreDeviceCompliancePolicy {
                 }
             )
             $requestBodyObject | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
+        } else {
+            # Remove properties that are not available for creating a new configuration
+            $requestBodyObject.PSObject.Properties | Foreach-Object {
+                if ($_.Name -eq "scheduledActionsForRule") {
+                    $config = @()
+                    $_.Value.scheduledActionConfigurations | ForEach-Object {
+                        $_ = $_ | select * -ExcludeProperty id
+                        $config += $_
+                    }
+                }
+            }
+            $scheduledActionsForRule = @(
+                @{
+                    ruleName = "PasswordRequired"
+                    scheduledActionConfigurations = $config
+                }
+            )
+            $requestBodyObject = $requestBodyObject | select * -ExcludeProperty scheduledActionsForRule
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, 'scheduledActionsForRule@odata.context' | ConvertTo-Json -Depth 100
+        $requestBodyObject | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, 'scheduledActionsForRule@odata.context',scheduledActionsForRule.id,'@odata.context' | ConvertTo-Json -Depth 100
         #$requestBody
         # Restore the Device Compliance Policy
         try {

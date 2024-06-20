@@ -12,14 +12,13 @@ The scripts has modular architecture where functions are combined into a single 
 
 #Supported functions
 
-- Invoke-SRIntuneBackupTenantInfo
 - Invoke-SRIntuneBackupAdminRole
 - Invoke-SRIntuneBackupAdminRoleAssignment
 - Invoke-SRIntuneBackupAndroidDeviceEnrollmentProfile
-- Invoke-SRIntuneBackupAppProtectionPolicy
-- Invoke-SRIntuneBackupAppProtectionPolicyAssignment
 - Invoke-SRIntuneBackupAppConfigurationPolicy
 - Invoke-SRIntuneBackupAppConfigurationPolicyAssignment
+- Invoke-SRIntuneBackupAppProtectionPolicy
+- Invoke-SRIntuneBackupAppProtectionPolicyAssignment
 - Invoke-SRIntuneBackupAssignmentFilter
 - Invoke-SRIntuneBackupAutopilotDeploymentProfile
 - Invoke-SRIntuneBackupAutopilotDeploymentProfileAssignments
@@ -27,7 +26,6 @@ The scripts has modular architecture where functions are combined into a single 
 - Invoke-SRIntuneBackupBrandingProfilesAssignments
 - Invoke-SRIntuneBackupClientApp
 - Invoke-SRIntuneBackupClientAppAssignment
-- Invoke-SRIntuneBackupNotificationTemplates
 - Invoke-SRIntuneBackupConditionalAccessPolicy
 - Invoke-SRIntuneBackupConfigurationPolicy
 - Invoke-SRIntuneBackupConfigurationPolicyAssignment
@@ -46,49 +44,57 @@ The scripts has modular architecture where functions are combined into a single 
 - Invoke-SRIntuneBackupGroupPolicyConfiguration
 - Invoke-SRIntuneBackupGroupPolicyConfigurationAssignment
 - Invoke-SRIntuneBackupGroups
+- Invoke-SRIntuneBackupNotificationTemplates
 - Invoke-SRIntuneBackupScopeTag
+- Invoke-SRIntuneBackupTenantInfo
 - Invoke-SRIntuneBackupWindowsDriverUpdateProfile
 - Invoke-SRIntuneBackupWindowsDriverUpdateProfileAssignments
 - Invoke-SRIntuneBackupWindowsFeatureUpdateProfile
 - Invoke-SRIntuneBackupWindowsFeatureUpdateProfileAssignments
 - Invoke-SRIntuneBackupWindowsQualityUpdateProfile
 - Invoke-SRIntuneBackupWindowsQualityUpdateProfileAssignments
-- Invoke-SRIntuneRestoreScopeTags
-- Invoke-SRIntuneRestoreGroups
-- Invoke-SRIntuneRestoreAssignmentFilter
-- Invoke-SRIntuneRestoreNotificationTemplates
+- Invoke-SRIntuneRestoreAdminRole
+- Invoke-SRIntuneRestoreAdminRoleAssignment
 - Invoke-SRIntuneRestoreAndroidDeviceEnrollmentProfile
-- Invoke-SRIntuneRestoreAppProtectionPolicy
 - Invoke-SRIntuneRestoreAppConfigurationPolicy
-- Invoke-SRIntuneRestoreAutopilotDeploymentProfile
-- Invoke-SRIntuneRestoreBrandingProfiles
-- Invoke-SRIntuneRestoreClientApps
-- Invoke-SRIntuneRestoreConditionalAccessPolicy
-- Invoke-SRIntuneRestoreDeviceCompliancePolicy
-- Invoke-SRIntuneRestoreDeviceConfiguration
-- Invoke-SRIntuneRestoreDeviceEnrollmentConfig
-- Invoke-SRIntuneRestoreDeviceHealthScript
-- Invoke-SRIntuneRestoreDeviceManagementIntent
-- Invoke-SRIntuneRestoreDeviceManagementScript
-- Invoke-SRIntuneRestoreGroupPolicyConfiguration
-- Invoke-SRIntuneRestoreWindowsDriverUpdateProfile
-- Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile
-- Invoke-SRIntuneRestoreWindowsQualityUpdateProfile
-- Invoke-SRIntuneRestoreAppProtectionPolicyAssignment
 - Invoke-SRIntuneRestoreAppConfigurationPolicyAssignment
+- Invoke-SRIntuneRestoreAppProtectionPolicy
+- Invoke-SRIntuneRestoreAppProtectionPolicyAssignment
+- Invoke-SRIntuneRestoreAssignmentFilter
+- Invoke-SRIntuneRestoreAutopilotDeploymentProfile
 - Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment
+- Invoke-SRIntuneRestoreBrandingProfiles
 - Invoke-SRIntuneRestoreBrandingProfilesAssignments
 - Invoke-SRIntuneRestoreClientAppAssignment
+- Invoke-SRIntuneRestoreClientApps
+- Invoke-SRIntuneRestoreConditionalAccessPolicy
+- Invoke-SRIntuneRestoreConfigurationPolicy
+- Invoke-SRIntuneRestoreConfigurationPolicyAssignment
+- Invoke-SRIntuneRestoreDeviceCompliancePolicy
 - Invoke-SRIntuneRestoreDeviceCompliancePolicyAssignment
+- Invoke-SRIntuneRestoreDeviceConfiguration
 - Invoke-SRIntuneRestoreDeviceConfigurationAssignment
+- Invoke-SRIntuneRestoreDeviceEnrollmentConfig
 - Invoke-SRIntuneRestoreDeviceEnrollmentConfigAssignment
+- Invoke-SRIntuneRestoreDeviceHealthScript
 - Invoke-SRIntuneRestoreDeviceHealthScriptAssignment
+- Invoke-SRIntuneRestoreDeviceManagementIntent
 - Invoke-SRIntuneRestoreDeviceManagementIntentAssignments
+- Invoke-SRIntuneRestoreDeviceManagementScript
 - Invoke-SRIntuneRestoreDeviceManagementScriptAssignment
+- Invoke-SRIntuneRestoreGroupPolicyConfiguration
 - Invoke-SRIntuneRestoreGroupPolicyConfigurationAssignment
+- Invoke-SRIntuneRestoreGroups
+- Invoke-SRIntuneRestoreNotificationTemplates
+- Invoke-SRIntuneRestoreScopeTags
+- Invoke-SRIntuneRestoreWindowsDriverUpdateProfile
 - Invoke-SRIntuneRestoreWindowsDriverUpdateProfileAssignments
+- Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile
 - Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments
+- Invoke-SRIntuneRestoreWindowsQualityUpdateProfile
 - Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments
+- Start-SRIntuneBackup
+- Start-SRIntuneRestoreConfig
 
 ##Authentication requirements
 To obtain sufficient permissions for performing backup and restore operations in Intune using the PowerShell module, delagated permissions must be granted by a tenant administrator to Microsoft Graph Command Line Tools enterprise application. This can be done in advance or when prompted during authentication when the module is used in a tenant for the first time.    
@@ -184,3 +190,12 @@ v1.5
 bugfixes
 Added restore of settings catalog policies and assignments
 Added creation of missing service principles referenced in Conditinoal Access policies
+
+v1.6
+added iOS enrolment profiles
+added restore of admin role assignments
+bugfixes
+
+v1.7
+fixed issues with restore of Compliance Policy scheduled actions
+minor bugfixes

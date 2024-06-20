@@ -47,7 +47,7 @@ function Invoke-SRIntuneBackupAdminRole {
         }
     }
     #Store Admin Roles hash table in a CSV file
-    $AdminRoles.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\Admin Roles\AdminRoles.csv" -NoTypeInformation
+    if ($AdminRoles){$AdminRoles.GetEnumerator() | Select Key, Value | Export-CSV -path "$Path\Admin Roles\AdminRoles.csv" -NoTypeInformation}
 }
 
 #Invoke-SRIntuneBackupAdminRole -Path "C:\temp\IntuneBackup\FunctionTest"

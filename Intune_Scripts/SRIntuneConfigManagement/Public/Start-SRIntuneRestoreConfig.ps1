@@ -115,6 +115,8 @@ function Start-SRIntuneRestoreConfig() {
     	Invoke-SRIntuneRestoreWindowsDriverUpdateProfileAssignments -Path $Path
 	    Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments -Path $Path
 	    Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments -Path $Path
+
+        Invoke-SRIntuneRestoreAdminRoleAssignment -Path $Path
     }
     Disconnect-MgGraph
 }

@@ -38,8 +38,8 @@ function Invoke-SRIntuneRestoreAdminRoleAssignment {
     )
 
     # Check if restore folder exists
-    if (-not (Test-Path "$Path\Device Configurations\Assignments")) {
-        Write-Warning "Folder '$Path\Device Configurations\Assignments' doesn't exist. Skipping restore of Admin role Assignments"
+    if (-not (Test-Path "$Path\Admin Roles\Assignments")) {
+        Write-Warning "Folder '$Path\Admin Roles\Assignments' doesn't exist. Skipping restore of Admin role Assignments"
         Return
     }
 
@@ -47,80 +47,66 @@ function Invoke-SRIntuneRestoreAdminRoleAssignment {
         If (-not $SourceGroups) {
             $SourceGroups = Import-SRGroupsFromCSV -Path "$Path"
         }
-        If (-not $SourceFilters) {
-            $SourceFilters = Import-SRFiltersFromCSV -Path "$Path"
-        }
     }
 
     # Get all Admin roles with assignments
-    $adminRoles = Get-ChildItem -Path "$Path\Device Configurations\Assignments\*" -Include *.json
+    $adminRoles = Get-ChildItem -Path "$Path\Admin Roles\Assignments\*" -Include *.json
     foreach ($adminRole in $adminRoles) {
         $adminRoleAssignments = Get-Content -LiteralPath $adminRole.FullName | ConvertFrom-Json
-        $adminRoleName = ($adminRole.BaseName)
+        $adminRoleId = ($($adminRole.BaseName -split("__"))[0])
 
-        # Get the Admin role we are restoring the assignments for
-        try {
-            $Uri = "$ApiVersion/deviceManagement/deviceConfigurations?`$filter=displayName eq '$adminRoleName'&`$select=id,displayName"
-            $adminRoleObject = Invoke-MgGraphRequest -Uri $Uri
-            if (-not ($adminRoleObject.Value)) {
-                Write-Warning "Error retrieving Admin role for $adminRoleName. Skipping assignment restore"
-                continue
-            }
-        }
-        catch {
-            Write-Verbose "Error retrieving Admin role for $adminRoleName, does it exist in the Intune tenant? Skipping assignment restore ..." -Verbose
-            Write-Error $_ -ErrorAction Continue
-            continue
-        }
-
-        # Create the base requestBody
-        $requestBody = @{
-            assignments = @()
-        }
-        
         # Add assignments to restore to the request body
         foreach ($adminRoleAssignment in $adminRoleAssignments) {
             If (!($SameTenant)) {
                 # Replace assignment group IDs in the body with the group id in the target tenant
-                $groupIdJson = $($adminRoleAssignment.target.groupId)
-                If ($groupIdJson -ne $null){
+                #$groupIdJson = $($adminRoleAssignment.members)
+                $i=0
+                foreach ($groupIdJson in $($adminRoleAssignment.members)){
                     $groupNameCsv = $null
                     $TargetGroupId = $null
                     $groupNameCsv = ($SourceGroups.GetEnumerator() | Where-Object {$_.Key -eq $groupIdJson}).Value
                     if($groupNameCsv){$TargetGroupId = Get-SRAssignedGroupId -GroupName $groupNameCsv}
-                    if($TargetGroupId){$adminRoleAssignment.target.groupId = $TargetGroupId}
+                    if($TargetGroupId){$adminRoleAssignment.members[$i] = $TargetGroupId}
+                    $i+=1
                 }
-               # Replace assignment filter IDs in the body with the filter id in the target tenant
-                $filterIdJson = $($adminRoleAssignment.target.deviceAndAppManagementAssignmentFilterId)
-                If($filterIdJson -ne $null){
-                    $filterNameCsv = $null
-                    $TargetFilterId = $null
-                    $filterNameCsv = ($SourceFilters.GetEnumerator() | Where-Object {$_.Key -eq $filterIdJson}).Value
-                    if($filterNameCsv){$TargetFilterId = Get-SRAssignedFilterId -FilterName $filterNameCsv}
-                    if($TargetFilterId){$adminRoleAssignment.target.deviceAndAppManagementAssignmentFilterId = $TargetFilterId}
+                $i=0
+                foreach ($groupIdJson in $($adminRoleAssignment.resourceScopes)){
+                    $groupNameCsv = $null
+                    $TargetGroupId = $null
+                    $groupNameCsv = ($SourceGroups.GetEnumerator() | Where-Object {$_.Key -eq $groupIdJson}).Value
+                    if($groupNameCsv){$TargetGroupId = Get-SRAssignedGroupId -GroupName $groupNameCsv}
+                    if($TargetGroupId){$adminRoleAssignment.resourceScopes[$i] = $TargetGroupId}
+                    $i+=1
                 }
             }
-            $requestBody.assignments += @{
-                "target" = $adminRoleAssignment.target
+            
+            # Create the base requestBody
+            $requestBody = @{
+                "@odata.type" = $adminRoleAssignment.'@odata.type'
+                "description" = $adminRoleAssignment.description
+                "displayName" = $adminRoleAssignment.displayName
+                "members" = $adminRoleAssignment.members
+                "resourceScopes" = $adminRoleAssignment.resourceScopes
+                "roleDefinition@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/roleDefinitions('$adminRoleId')"
             }
         }
 
         # Convert the PowerShell object to JSON
         $requestBody = $requestBody | ConvertTo-Json -Depth 100
-
+        #$requestBody
         # Restore the assignments
         try {
-            $Uri = "$ApiVersion/deviceManagement/deviceConfigurations/$($adminRoleObject.Value.id)/assign"
+            $Uri = "$ApiVersion/deviceManagement/roleAssignments"
             $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Admin role Assignments"
                 "Name"   = $adminRoleObject.Value.displayName
-                "Path"   = "Device Configurations\Assignments\$($adminRole.Name)"
+                "Path"   = "Admin Roles\Assignments\$($adminRole.Name)"
             }
         }
         catch {
-            Write-Verbose "$($adminRoleObject.Value.displayName) - Failed to restore Device Configuration Assignment(s)" -Verbose
+            Write-Verbose "$($adminRoleAssignment.displayName) - Failed to restore Admin Roles Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
         Start-Sleep -Seconds 5

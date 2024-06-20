@@ -28,17 +28,22 @@ function Invoke-SRIntuneBackupDeviceCompliancePolicy {
         $null = New-Item -Path "$Path\Device Compliance Policies" -ItemType Directory
     }
 
-    # Get all Device Compliance Policies
-    $Uri = "$ApiVersion/deviceManagement/deviceCompliancePolicies" #?$expand=scheduledActionsForRule" - not working as of 03.05.2024
+
+    # Get all policies
+    $Uri = "$ApiVersion/deviceManagement/deviceCompliancePolicies"
     $deviceCompliancePolicies = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+
+    # Get details of each Device Compliance Policy
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $deviceCompliancePolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Compliance Policies\$fileName.json"
+        $Uri = "$ApiVersion/deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicy.id)?`$expand=scheduledActionsForRule(`$expand=scheduledActionConfigurations)"
+        $deviceCompliancePolicyDetails = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+        $fileName = ($deviceCompliancePolicyDetails.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $deviceCompliancePolicyDetails | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Compliance Policies\$fileName.json"
 
         [PSCustomObject]@{
             "Action" = "Backup"
             "Type"   = "Device Compliance Policy"
-            "Name"   = $deviceCompliancePolicy.displayName
+            "Name"   = $deviceCompliancePolicyDetails.displayName
             "Path"   = "Device Compliance Policies\$fileName.json"
         }
     }

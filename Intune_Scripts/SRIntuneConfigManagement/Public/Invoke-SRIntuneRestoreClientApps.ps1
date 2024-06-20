@@ -78,7 +78,7 @@ function Invoke-SRIntuneRestoreClientApps {
                 $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
                 [PSCustomObject]@{
                     "Action" = "Restore"
-                    "Type"   = "Mobile Application"
+                    "Type"   = $ClientAppType
                     "Name"   = $ClientAppDisplayName
                     "Path"   = "Client Apps\$($ClientApp.Name)"
                 }

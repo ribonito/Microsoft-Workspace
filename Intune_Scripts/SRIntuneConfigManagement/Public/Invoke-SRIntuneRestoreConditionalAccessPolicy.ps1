@@ -92,7 +92,7 @@ function Invoke-SRIntuneRestoreConditionalAccessPolicy {
             }
         }
         foreach ($appId in $($requestBodyObject.conditions.applications.includeApplications)){
-            if($appId -ne "All"){
+            if($appId -ne "All" -and $appId -ne "Office365"){
                 $Uri = "$ApiVersion/servicePrincipals?`$filter=appId eq '$appId'"
                 $result = Invoke-MgGraphRequest -Uri $Uri -ErrorAction Stop
                 if (-not $($result.value.appid)) {

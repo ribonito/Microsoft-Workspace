@@ -101,7 +101,7 @@ function Invoke-SRIntuneRestoreAutopilotDeploymentProfileAssignment {
         }
         [PSCustomObject]@{
             "Action" = "Restore"
-            "Type"   = "Device Configuration Assignments"
+            "Type"   = "Autopilot Deployment Profile Assignments"
             "Name"   = $ProfileObject.Value.displayName
             "Path"   = "Autopilot Deployment Profiles\Assignments\$($Profile.Name)"
         }
