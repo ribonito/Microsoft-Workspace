@@ -199,3 +199,7 @@ bugfixes
 v1.7
 fixed issues with restore of Compliance Policy scheduled actions
 minor bugfixes
+
+v1.8
+bugfixes
+added support for administrative template policies based on custom ADMX files. ADMX files must still be uploaded manually before restoring the policies

@@ -48,6 +48,11 @@ function Invoke-SRIntuneRestoreGroupPolicyConfiguration {
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationContent = Get-Content -LiteralPath $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json
+
+    #Get Source tenant scope tags
+    If (-not $SourceDefs -and $groupPolicyConfigurationContent.Policy.policyConfigurationIngestionType -eq "custom" -and -not($SameTenant)) {
+    $SourceDefs = Import-SRPolicyDefinitionsFromCSV -Path "$Path"
+    }
         
         if ($groupPolicyConfigurationContent.Policy.roleScopeTagIds -and -not($SameTenant)) {
             $i = 0
@@ -70,17 +75,59 @@ function Invoke-SRIntuneRestoreGroupPolicyConfiguration {
             $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations"
             $groupPolicyConfigurationObject = Invoke-MgGraphRequest -Method POST -Body ($groupPolicyConfigurationRequestBody | ConvertTo-Json).toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
 
+            $groupPolicyConfigurationSettingBody = @{
+                "added" = @()
+                "updated" = @()
+                "deletedIds"= @()
+            }
+
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent.Definitions) {
-                $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues"
-                $groupPolicyDefinitionValue = Invoke-MgGraphRequest -Method POST -Body ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
-                $Uri = "$ApiVersion/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
+            
+            if ($($groupPolicyConfigurationContent.Policy.policyConfigurationIngestionType) -eq "custom" -and -not($SameTenant)) {
+                $DefIDjson = ($($groupPolicyConfigurationSetting.'definition@odata.bind') -split("'"))[1]
+                $DefNameCsv = $null
+                $TargetDefId = $null
+                $DefCsv = $SourceDefs | Select-Object -Property id,categoryPath,displayName | Where-Object {$_.id -eq $DefIDjson}
+                if($DefCsv){$TargetDefId = Get-SRPolicyDefinitionId -DefinitionName $($DefCsv.displayName) -categoryPath $($DefCsv.categoryPath)}
+                if($TargetDefId){
+                    $TargetValue = $($groupPolicyConfigurationSetting.'definition@odata.bind') -replace $DefIDjson,$TargetDefId
+                    $groupPolicyConfigurationSetting.'definition@odata.bind' = $TargetValue
+                }
+
+                if($($groupPolicyConfigurationSetting.presentationValues)){
+                    $NewPresenationValueObject = @()
+                    foreach($presentationValue in $groupPolicyConfigurationSetting.presentationValues){
+                        $SourcePresenationId = ($($presentationValue.'presentation@odata.bind') -split("'"))[3]
+                        $Uri = "$ApiVersion/deviceManagement/groupPolicyDefinitions/$TargetDefId/presentations?`$filter=label eq '$($presentationValue.label)'"
+                        $TargetPresentation = Invoke-MgGraphRequest -Uri $Uri
+                        If($TargetPresentation){
+                            $PresentationBind = $($($presentationValue.'presentation@odata.bind') -replace $SourcePresenationId,$($TargetPresentation.value.id)) -replace $DefIDjson,$TargetDefId
+                            $presentationValue.'presentation@odata.bind' = $PresentationBind
+                        }
+                        $CurrentValue = @{
+                            "presentation@odata.bind" = $presentationValue.'presentation@odata.bind'
+                            "value" = $presentationValue.value
+                            "@odata.type" = $presentationValue.'@odata.type'
+                        }
+                    $NewPresenationValueObject += $CurrentValue
+                    }
+                $groupPolicyConfigurationSetting.presentationValues = $NewPresenationValueObject
+                }
             }
-            [PSCustomObject]@{
-                "Action" = "Restore"
-                "Type"   = "Administrative Template"
-                "Name"   = $groupPolicyConfigurationObject.displayName
-                "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
-            }
+            
+            $groupPolicyConfigurationSettingBody.added += $groupPolicyConfigurationSetting
+
+        }
+        
+        $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/UpdateDefinitionValues"
+        $null = Invoke-MgGraphRequest -Method POST -Body ($groupPolicyConfigurationSettingBody | ConvertTo-Json -Depth 100).toString() -Uri $Uri -ContentType "application/json" -ErrorAction Stop
+        
+        [PSCustomObject]@{
+            "Action" = "Restore"
+            "Type"   = "Administrative Template"
+            "Name"   = $groupPolicyConfigurationObject.displayName
+            "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
+          }
         }
         catch {
             Write-Verbose "$($groupPolicyConfiguration.BaseName) - Failed to restore Group Policy Configuration and/or (one or more) Settings" -Verbose

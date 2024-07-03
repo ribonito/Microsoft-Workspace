@@ -28,11 +28,13 @@ function Invoke-SRIntuneBackupGroupPolicyConfiguration {
         $null = New-Item -Path "$Path\Administrative Templates" -ItemType Directory
     }
 
+    $IsCustom = $false
     # Get all Group Policy Configurations
     $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations"
     $groupPolicyConfigurations = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
+        if($($groupPolicyConfiguration.policyConfigurationIngestionType) -eq "custom") {$IsCustom = $true}
         $Uri = "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues"
         $groupPolicyDefinitionValues = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
         $groupPolicyBackupValues = @{
@@ -60,6 +62,7 @@ function Invoke-SRIntuneBackupGroupPolicyConfiguration {
                             "value" = $groupPolicyPresentationValue.value
                             "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
                             "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
+                            "label" = $($groupPolicyPresentationValue.presentation.label)
                         }
                     } elseif ($groupPolicyPresentationValue.values){
                     $groupPolicyBackupValue."presentationValues" +=
@@ -67,6 +70,7 @@ function Invoke-SRIntuneBackupGroupPolicyConfiguration {
                             "values" = $groupPolicyPresentationValue.values
                             "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
                             "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
+                            "label" = $($groupPolicyPresentationValue.presentation.label)
                         }
                     }
                 }
@@ -83,6 +87,23 @@ function Invoke-SRIntuneBackupGroupPolicyConfiguration {
             "Name"   = $groupPolicyConfiguration.displayName
             "Path"   = "Administrative Templates\$fileName.json"
         }
+    }
+
+    #Store group name, type and id in a hash table
+    if($IsCustom){
+            
+        # Get all Group Policy Configurations
+        $DefExport = @()
+        $Uri = "$ApiVersion/deviceManagement/groupPolicyDefinitions?`$filter=policyType eq 'admxIngested'&`$select=id,categoryPath,displayName"
+        $definitions = Invoke-MgGraphRequest -Uri $Uri | Get-MgGraphAllPages
+        foreach ($definition in $definitions){
+            $row = "" | Select-Object id,categoryPath,displayName
+            $row.id = $definition.id
+            $row.categoryPath = $definition.categoryPath  
+            $row.displayName = $definition.displayName
+            $DefExport += $row
+        }
+        $DefExport | Export-CSV -path "$Path\Administrative Templates\Definitions.csv" -NoTypeInformation -Encoding UTF8
     }
 }
 
