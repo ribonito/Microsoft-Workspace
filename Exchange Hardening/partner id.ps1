@@ -4,55 +4,20 @@
 # Import-Module PartnerCenter 
 # Connect to partner center 
 Connect-PartnerCenter
+import-module partnercenter
  
-Function Get-User-From-PartnerCenter {
-[cmdletbinding()]
-Param (
-[parameter(Mandatory=$true)]
-[string]$csvPath,
-[string]$userName
-)
-# End of Parameters
- Process {
-         $Result = ""   
-         $Results = @() 
-         $ErrorActionPreference = "Stop"
- 
-         # Get all tenats in Partner center
- 
-         $Customers = Get-PartnerCustomer
- 
-         # Search every tenant for specific user
- 
-         $Customers.ForEach({
- 
-         Try{
-                $CustId = $_.CustomerId
-                $CustName = $_.Name
-                $CustomerUser = Get-PartnerCustomerUser -CustomerId $CustId | Where-Object {
-                $_.DisplayName -like "*$userName*"
-                } | ForEach-Object { New-Object -TypeName PSCustomObject -Property @{
-                Name = $_.DisplayName
-                'User Principal Name' = $_.UserPrincipalName
-                }
-               }
-                
-               # If user is found, Write it to CSV file
- 
-                if($CustomerUser -notlike ''){
-                  $Result = @{'Customer Name' = $CustName; 'User Name' = $CustomerUser.Name; 'User Principal Name' = $CustomerUser.'User Principal Name'}
-                  $Results += New-Object PSObject -Property $Result
-                  $Results = $Results | Select-Object 'Customer Name','User Name','User Principal Name' | Export-Csv -Path $csvPath -Notype -append
-                }
-         }
-             
-         Catch{
- 
-               Write-Warning "Caught an exception:"
-               Write-Warning "Exception Type: $($_.Exception.GetType().FullName)"
-               Write-Warning "Exception Message: $($_.Exception.Message) - Tenant:$CustName"
-          }
-         }
-       )
-     }
-    }
+Get-PartnerAgreementDetail
+
+Get-PartnerBillingProfile
+
+
+
+get-PartnerCustomer
+
+
+Get-PartnerCustomer -CustomerId '56299af2-fcd5-4085-9320-d6c7fdb9db95' | select -ExpandProperty Name
+
+Get-PartnerCustomerBillingProfile -CustomerId '2c0d789f-2311-4d29-83c5-395a89052a25'| fl
+
+
+Import-csv “c:\temp\CustomerAgreementRecords.csv” | foreach { Get-PartnerCustomerBillingProfile -CustomerId $_.CustomerTenantId -ErrorAction SilentlyContinue } | Select-Object -Property Email, FirstName,LastName | Export-Csv c:\temp\Processed-CustomerAgreementRecords.csv -NoTypeInformation -Verbose
