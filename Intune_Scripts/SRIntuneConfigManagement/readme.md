@@ -93,6 +93,7 @@ The scripts has modular architecture where functions are combined into a single 
 - Invoke-SRIntuneRestoreWindowsFeatureUpdateProfileAssignments
 - Invoke-SRIntuneRestoreWindowsQualityUpdateProfile
 - Invoke-SRIntuneRestoreWindowsQualityUpdateProfileAssignments
+- Invoke-SRIntuneRestoreWin32App
 - Start-SRIntuneBackup
 - Start-SRIntuneRestoreConfig
 
@@ -203,3 +204,7 @@ minor bugfixes
 v1.8
 bugfixes
 added support for administrative template policies based on custom ADMX files. ADMX files must still be uploaded manually before restoring the policies
+
+v1.9
+added restore of Win32 apps based on functions from IntuneWin32Apps module
+minor fixes

@@ -86,7 +86,7 @@ function Invoke-SRIntuneRestoreAssignmentFilter {
                 "Action" = "Restore"
                 "Type"   = "Assignment filter"
                 "Name"   = $ProfileDisplayName
-                "Path"   = "Device Configurations\$($Profile.Name)"
+                "Path"   = "Assignment Filters\$($Profile.Name)"
             }
         }
         catch {
