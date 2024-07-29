@@ -1,27 +1,15 @@
-Write-Host "Checking for MSOnline module..."
+Install-Module -Name MSCommerce -Scope CurrentUser
 
-$Module = Get-Module -Name "MSOnline" -ListAvailable
+Import-Module -Name MSCommerce
 
-if ($Module -eq $null) {
-    
-        Write-Host "MSOnline module not found, installing MSOnline"
-        Install-Module -name MSOnline
-    
-    }
+Connect-MSCommerce #log in here
 
-Write-Host "Please Enter your Partner Center Global Admin Credentials"
+$products = Get-MSCommerceProductPolicies -PolicyId AllowSelfServicePurchase | Where { $_.PolicyValue -eq "Enabled"}
 
-Connect-MSolservice -Credential $credential
-$tenants = Get-MsolPartnerContract -All
+foreach ($p in $products)
 
+{
 
-
-
-ForEach($tenant in $tenants){
-
-Write-Host "Disabling Self-Service for $($tenant.Name)" -ForegroundColor Green
-
-Set-MsolCompanySettings -Tenant $tenant.tenantID -AllowAdHocSubscriptions $false
-
+Update-MSCommerceProductPolicy -PolicyId AllowSelfServicePurchase -ProductId $p.ProductId -Enabled $False
 
 }
