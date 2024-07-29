@@ -22,7 +22,7 @@ function Start-SRIntuneRestoreConfig() {
         [string]$Path,
         [Parameter(Mandatory = $false)]
         [switch]$Assigments,
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [string]$tenantId
     )
 
@@ -97,6 +97,7 @@ function Start-SRIntuneRestoreConfig() {
 	Invoke-SRIntuneRestoreWindowsDriverUpdateProfile -Path $Path
 	Invoke-SRIntuneRestoreWindowsFeatureUpdateProfile -Path $Path
 	Invoke-SRIntuneRestoreWindowsQualityUpdateProfile -Path $Path
+    Invoke-SRIntuneRestoreWin32App -Path $Path -TenantID $TenantId
 
     if ($Assigments) {
     	Invoke-SRIntuneRestoreAppProtectionPolicyAssignment -Path $Path
