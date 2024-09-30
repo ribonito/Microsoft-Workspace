@@ -6,7 +6,9 @@ param(
     [Parameter()]
     [ValidateSet('Install','Uninstall')]
     [string]
-    $Action = "Install"
+    $Action = "Install",
+    [string]
+    $TimeZone = "W. Europe Standard Time"
 )
 
 function Log() {
@@ -29,7 +31,7 @@ If ($ENV:PROCESSOR_ARCHITEW6432 -eq "AMD64") {
     Exit
 }
 
-$Version = "1.0"
+$Version = "1.1"
 Start-Transcript -Path "$($env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\LanguageConfig-$Version-$Language-$Action.log"
 
 if($Geoid -eq 223){ 
@@ -40,6 +42,7 @@ if($Geoid -eq 223){
 try {
     Import-Module -Name LanguagePackManagement
     if ($Action -eq "Install") {
+        Log "Adding display language $Language to the device"
         Install-Language -Language $Language -CopyToSettings
 
         $LanguageList = New-WinUserLanguageList -Language $Language
@@ -48,6 +51,7 @@ try {
         $i=1
         foreach($InputLang in $InputLangList){
             If($InputLang -ne $Language){
+                Log "Adding input language $Language"
                 $LanguageList.Add($InputLang)
                 $LanguageList[$i].Handwriting = $True
                 $LanguageList[$i].Spellchecking = $True 
@@ -55,20 +59,28 @@ try {
         }
         Set-WinUserLanguageList -LanguageList $LanguageList -Force
 
+        Log "Setting system locale to $Language"
         Set-WinSystemLocale $Language
+        Log "Setting preferred user interface language to $Language"
         Set-SystemPreferredUILanguage $Language
+        Log "Setting location to $Geoid"
         Set-WinHomeLocation -GeoID $Geoid
+        Log "Setting culture to $Language"
         Set-Culture -CultureInfo $Language
+        Log "Setting time zone to $TimeZone"
+        Set-TimeZone -Id $TimeZone
         #The followiong command is only available from Windows11 22H2
         $osBuild = $(gwmi -class win32_operatingsystem).BuildNumber
         Log "OS build is 10.0.$osBuild"
         if($osBuild -ge 22621){
-        Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
+            Log "Applying settings to new users"
+            Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
         } else {
-            Log "Won't run Copy-UserInternationalSettingsToSystem command"
+            Log "Won't run Copy-UserInternationalSettingsToSystem command as Windows build $osBuild does not support it."
         }
     } else {
         Uninstall-Language -Language $Language
+        Log "Removing language $Language from the device"
     }
 }
 catch {
