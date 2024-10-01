@@ -8,7 +8,7 @@ $ClientSecret = "WUo8Q~2wxmApVln5ULJ8H6Y1qd2Dp4Hkn6nIzcdE"
 
 # Start logging
 $DateTime = Get-Date -Format "MM-dd-yyyy-HH-mm"
-$LogPath = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\SetHHADJComputerName-remediate.log"
+$LogPath = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\SetHHADJComputerName.log"
 Start-Transcript $LogPath -Append
 Write-Host "----------------------------------------------------"
 Write-Host "$(Get-Date):  Script started"
@@ -73,6 +73,39 @@ if($DeviceNameAP -eq "" -or $DeviceNameAP -eq $null) {
                 Write-Host "Renaming computer to $DeviceNameAP"
                 $Result = Rename-Computer -NewName $DeviceNameAP -Force -Passthru
                 If($($Result.HasSucceeded)) {
+                    
+                    #check if we need to reissue certificates after device name has changed
+                    Write-Host "Checking for cefrtificates issued to $ActualName"
+                    $certs = Get-ChildItem -path cert:\LocalMachine\My |Where-Object{ (($TmplExt = $_.Extensions | Where-Object {$_.Oid.FriendlyName -eq "Subject Alternative Name"}) -and $TmplExt.format(0) -match $ActualName) -or $_.subject  -match $ActualName} #|Remove-Item
+                    If($certs){
+                        Write-Host "Found $($certs.count) certificates"
+                        try {
+                            foreach($cert in $certs) {
+                                Write-Host "Removing cedrtificate: $($cert.subject)"
+                                $cert | Remove-Item -Force
+                            }
+                            Start-Sleep -Seconds 180
+                        } catch {
+                            Write-Error $_.Exception.Message
+                            Stop-Transcript
+                            Exit 3
+                        }
+                        $EnrollmentID = Get-ItemPropertyValue HKLM:\SOFTWARE\Microsoft\Provisioning\OMADM\Logger -Name CurrentEnrollmentId -ErrorAction SilentlyContinue
+                        Write-Host "Enrollment ID from the registry: $EnrollmentID"
+                        $Arguments = "/o $EnrollmentID /c /lf"
+                        Write-Host "Running command: C:\Windows\SYSTEM32\deviceenroller.exe $Arguments"
+                        try {
+                            $process = Start-Process -FilePath "C:\Windows\SYSTEM32\deviceenroller.exe" -ArgumentList $Arguments -PassThru -Wait -ErrorAction SilentlyContinue
+                            if ($process.ExitCode -ne 0) {
+                                Write-Warning "Failed to initiate policy sync: $($process.ExitCode). Certificates will be issued during the next scheduled sync."
+                            }
+                        } catch {
+                            Write-Warning "Failed to initiate policy sync: $($_.Exception.Message). Certificates will be issued during the next scheduled sync."
+                        }
+
+                        Write-Host "Giving the device 3 minutes to sync before initiating reboot"
+                        Start-Sleep -Seconds 180
+                    }
                     # Make sure we reboot if still in ESP/OOBE by reporting a 1641 return code (hard reboot)
                     if ($details.CsUserName -match "defaultUser"){
                         Write-Host "Exiting during ESP/OOBE. Restart will not be initiated."
@@ -84,6 +117,8 @@ if($DeviceNameAP -eq "" -or $DeviceNameAP -eq $null) {
                     } else {
                         Write-Host "Initiating a restart in 60 minutes"
                         & shutdown.exe /g /t 3600 /f /c "Restarting the computer in 60 minutes due to a computer name change. Save your work! You can restart computer yourself at any time."
+                        #Set a tag in the registry to avoid further name checks in future
+                        REG add "HKLM\Software\Sunrise\Manage" /v "HAADJComputerRename" /t REG_DWORD /d 1 /f
                         Stop-Transcript
                         Exit 0
                     }
@@ -100,4 +135,4 @@ if($DeviceNameAP -eq "" -or $DeviceNameAP -eq $null) {
         }
     }
 }
-       
+      
