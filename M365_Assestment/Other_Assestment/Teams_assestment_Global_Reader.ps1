@@ -52,4 +52,4 @@ $group = Invoke-RestMethod -Headers @{Authorization = "Bearer $accesstoken"} -Ur
 $TeamsList |Export-csv $ExportPath -NoTypeInformation
 }
 }
-Export-TeamsList -ExportPath "C:\teamslist.csv"
+Export-TeamsList -ExportPath "C:\temp\teamslist.csv"

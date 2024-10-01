@@ -1,5 +1,5 @@
-Connect-MicrosoftTeams
 Connect-ExchangeOnline
+Connect-MicrosoftTeams
 $AllTeamsInOrg = (Get-Team).GroupID 
  
 $TeamList = @() 
