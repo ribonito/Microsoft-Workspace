@@ -1,0 +1,3 @@
+Connect-MsolService
+Connect-ExchangeOnline
+Connect-AzureAD

@@ -1,6 +1,6 @@
 # Connect to SharePoint Online administration endpoint
 Import-Module -Name Microsoft.Online.SharePoint.PowerShell
-Connect-SPOService -URL "https://hawlech-admin.sharepoint.com/" 
+Connect-SPOService -URL "https://grobkiesch-admin.sharepoint.com/" 
 
 # Get a list of OneDrive for Business sites in the tenant sorted by the biggest consumer of quota
 Write-Host "Finding OneDrive sites..."
