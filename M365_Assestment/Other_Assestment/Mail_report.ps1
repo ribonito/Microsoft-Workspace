@@ -116,8 +116,18 @@ switch ($number)
 
 1 {
 
-$AllMailbox = Get-mailbox -resultsize unlimited
-
+try {
+	$AllMailbox = Get-mailbox -resultsize unlimited
+} catch {
+	Write-Host "Error fetching mailboxes: $_" -ForegroundColor Red
+	exit
+}
+try {
+	$Stats = Get-mailboxStatistics -Identity $Mbx.distinguishedname -WarningAction SilentlyContinue
+} catch {
+	Write-Host "Error fetching mailbox statistics for $($Mbx.displayname): $_" -ForegroundColor Red
+	continue
+}
 Foreach($Mbx in $AllMailbox)
 
 {

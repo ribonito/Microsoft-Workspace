@@ -65,7 +65,7 @@ Function ConnectTo-EXO {
     # Check if EXO is installed and connect if no connection exists
     if ((Get-Module -ListAvailable -Name ExchangeOnlineManagement) -eq $null)
     {
-      Write-Host "Exchange Online PowerShell v2 module is requied, do you want to install it?" -ForegroundColor Yellow
+      Write-Host "Exchange Online PowerShell v2 module is required, do you want to install it?" -ForegroundColor Yellow
       
       $install = Read-Host Do you want to install module? [Y] Yes [N] No 
       if($install -match "[yY]") 
@@ -84,7 +84,7 @@ Function ConnectTo-EXO {
     {
 	    # Check if there is a active EXO sessions
 	    $psSessions = Get-PSSession | Select-Object -Property State, Name
-	    If (((@($psSessions) -like '@{State=Opened; Name=ExchangeOnlineInternalSession*').Count -gt 0) -ne $true) {
+      If ($psSessions -notmatch 'Opened.*ExchangeOnlineInternalSession') {
 		    Connect-ExchangeOnline -UserPrincipalName $adminUPN
 	    }
     }
@@ -178,8 +178,8 @@ Function Get-MailboxStats {
         "Mailbox Warning quota (GB)" = $_.IssueWarningQuota.ToString().Split("(")[0]
         "Max mailbox size (Gb)" = $_.ProhibitSendReceiveQuota.ToString().Split("(")[0]
         "Archive size (Gb)" = $archiveSize
-        "Archive Item Count" = $archiveResult.ItemCount
-        "Archive Deleted Item Count" = $archiveResult.DeletedItemCount
+        "Archive Item Count" = if ($archiveResult) { $archiveResult.ItemCount } else { 0 }
+        "Archive Deleted Item Count" = if ($archiveResult) { $archiveResult.DeletedItemCount } else { 0 }
         "Archive Warning quota (GB)" = $_.ArchiveWarningQuota.ToString().Split("(")[0]
         "Archive quota (Gb)" = ConvertTo-Gb -size $_.ArchiveQuota.ToString().Split("(")[0]
       }

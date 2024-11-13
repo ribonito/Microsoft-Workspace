@@ -22,12 +22,12 @@ try {
 }
 
 # Connect to SharePoint Online
-try {
-    Connect-SPOService -Url "https://hugeng-admin.sharepoint.com"
-    Write-Output "Connected to SharePoint Online successfully."
-} catch {
-    Write-Output "Failed to connect to SharePoint Online: $_"
-    exit 1
+#try {
+   # Connect-SPOService -Url "https://hugeng-admin.sharepoint.com"
+   # Write-Output "Connected to SharePoint Online successfully."
+#} catch {
+ #   Write-Output "Failed to connect to SharePoint Online: $_"
+  #  exit 1
 }
 
 # Incident Response Plan

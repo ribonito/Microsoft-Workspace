@@ -35,7 +35,7 @@ if($Module.count -eq 0)
 }
 Write-Host Importing Microsoft Teams module... -ForegroundColor Yellow
 #Autentication using MFA
-if($mfa.IsPresent)
+if($MFA.IsPresent)
 {
  $Team=Connect-MicrosoftTeams
 }
