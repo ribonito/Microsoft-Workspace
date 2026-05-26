@@ -19,7 +19,7 @@ The repository is organized into distinct, specialized directories to ensure hig
   * `SharePoint/` - Bulk site provisioning and Teams creation automation.
   * `Utilities/` - Multi-service O365 connection establishing helper.
 * `OnPremises_Scripts/` - Client-side, Active Directory Domain Services, and on-premises infrastructure scripts.
-  * `Exchange_Management/` - Hybrid Exchange synchronization enabling helper.
+  * `Exchange_Management/` - Hybrid Exchange synchronization enabling helper and Exchange 2019 / SE assessment/health checks.
   * `Intune/` - Client endpoint configuration scripts (drive maps, printer maps, HAADJ renames, and client security settings).
   * `M365_Assessment/` - On-premises virtualization auditing (Citrix desktop inventory).
   * `Utilities/` - Client networking configurations (system-wide proxy setup) and local M365 desktop app cache clearers.

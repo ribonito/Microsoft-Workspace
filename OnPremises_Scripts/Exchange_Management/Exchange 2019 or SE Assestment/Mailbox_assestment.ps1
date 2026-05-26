@@ -40,7 +40,8 @@ The SMTP address to send the email from.
 .PARAMETER MailTo
 The SMTP address to send the email to.
 
--MailServer The SMTP server to send the email through.
+.PARAMETER MailServer
+The SMTP server to send the email through.
 
 .EXAMPLE
 .\Get-MailboxReport.ps1 -Database DB01
@@ -273,8 +274,14 @@ foreach ($mb in $mailboxes) {
     $user = Get-User $mb
     $aduser = Get-ADUser $mb.samaccountname -Properties Enabled, AccountExpirationDate
     
-    $primarydb = $mailboxdatabases | where { $_.Name -eq $mb.Database.Name }
-    $archivedb = $mailboxdatabases | where { $_.Name -eq $mb.ArchiveDatabase.Name }
+    $primarydb = $null
+    if ($mb.Database -ne $null) {
+        $primarydb = $mailboxdatabases | where { $_.Name -eq $mb.Database.Name }
+    }
+    $archivedb = $null
+    if ($mb.ArchiveDatabase -ne $null) {
+        $archivedb = $mailboxdatabases | where { $_.Name -eq $mb.ArchiveDatabase.Name }
+    }
 
     #Create a custom PS object to aggregate the data we're interested in
 	
@@ -285,26 +292,70 @@ foreach ($mb in $mailboxes) {
     $userObj | Add-Member NoteProperty -Name "Department" -Value $user.Department
     $userObj | Add-Member NoteProperty -Name "Office" -Value $user.Office
 
-    $userObj | Add-Member NoteProperty -Name "Total Mailbox Size (Mb)" -Value ($stats.TotalItemSize.Value.ToMB() + $stats.TotalDeletedItemSize.Value.ToMB())
-    $userObj | Add-Member NoteProperty -Name "Mailbox Size (Mb)" -Value $stats.TotalItemSize.Value.ToMB()
-    $userObj | Add-Member NoteProperty -Name "Mailbox Recoverable Item Size (Mb)" -Value $stats.TotalDeletedItemSize.Value.ToMB()
-    $userObj | Add-Member NoteProperty -Name "Mailbox Items" -Value $stats.ItemCount
+    $mailboxSize = 0
+    $mailboxRecoverableSize = 0
+    $itemCount = 0
+    if ($stats) {
+        if ($stats.TotalItemSize -ne $null -and $stats.TotalItemSize.Value -ne $null) {
+            $mailboxSize = $stats.TotalItemSize.Value.ToMB()
+        }
+        if ($stats.TotalDeletedItemSize -ne $null -and $stats.TotalDeletedItemSize.Value -ne $null) {
+            $mailboxRecoverableSize = $stats.TotalDeletedItemSize.Value.ToMB()
+        }
+        if ($stats.ItemCount -ne $null) {
+            $itemCount = $stats.ItemCount
+        }
+    }
+    $totalMailboxSize = $mailboxSize + $mailboxRecoverableSize
 
-    $userObj | Add-Member NoteProperty -Name "Inbox Folder Size (Mb)" -Value $inboxstats.FolderandSubFolderSize.ToMB()
-    $userObj | Add-Member NoteProperty -Name "Sent Items Folder Size (Mb)" -Value $sentitemsstats.FolderandSubFolderSize.ToMB()
-    $userObj | Add-Member NoteProperty -Name "Deleted Items Folder Size (Mb)" -Value $deleteditemsstats.FolderandSubFolderSize.ToMB()
+    $inboxSize = 0
+    if ($inboxstats -ne $null -and $inboxstats.FolderandSubFolderSize -ne $null) {
+        $inboxSize = $inboxstats.FolderandSubFolderSize.ToMB()
+    }
+    $sentItemsSize = 0
+    if ($sentitemsstats -ne $null -and $sentitemsstats.FolderandSubFolderSize -ne $null) {
+        $sentItemsSize = $sentitemsstats.FolderandSubFolderSize.ToMB()
+    }
+    $deletedItemsSize = 0
+    if ($deleteditemsstats -ne $null -and $deleteditemsstats.FolderandSubFolderSize -ne $null) {
+        $deletedItemsSize = $deleteditemsstats.FolderandSubFolderSize.ToMB()
+    }
 
-    if ($archivestats -eq "n/a") {
+    $userObj | Add-Member NoteProperty -Name "Total Mailbox Size (Mb)" -Value $totalMailboxSize
+    $userObj | Add-Member NoteProperty -Name "Mailbox Size (Mb)" -Value $mailboxSize
+    $userObj | Add-Member NoteProperty -Name "Mailbox Recoverable Item Size (Mb)" -Value $mailboxRecoverableSize
+    $userObj | Add-Member NoteProperty -Name "Mailbox Items" -Value $itemCount
+
+    $userObj | Add-Member NoteProperty -Name "Inbox Folder Size (Mb)" -Value $inboxSize
+    $userObj | Add-Member NoteProperty -Name "Sent Items Folder Size (Mb)" -Value $sentItemsSize
+    $userObj | Add-Member NoteProperty -Name "Deleted Items Folder Size (Mb)" -Value $deletedItemsSize
+
+    if ($archivestats -eq "n/a" -or $archivestats -eq $null) {
         $userObj | Add-Member NoteProperty -Name "Total Archive Size (Mb)" -Value "n/a"
         $userObj | Add-Member NoteProperty -Name "Archive Size (Mb)" -Value "n/a"
         $userObj | Add-Member NoteProperty -Name "Archive Deleted Item Size (Mb)" -Value "n/a"
         $userObj | Add-Member NoteProperty -Name "Archive Items" -Value "n/a"
     }
     else {
-        $userObj | Add-Member NoteProperty -Name "Total Archive Size (Mb)" -Value ($archivestats.TotalItemSize.Value.ToMB() + $archivestats.TotalDeletedItemSize.Value.ToMB())
-        $userObj | Add-Member NoteProperty -Name "Archive Size (Mb)" -Value $archivestats.TotalItemSize.Value.ToMB()
-        $userObj | Add-Member NoteProperty -Name "Archive Deleted Item Size (Mb)" -Value $archivestats.TotalDeletedItemSize.Value.ToMB()
-        $userObj | Add-Member NoteProperty -Name "Archive Items" -Value $archivestats.ItemCount
+        $archiveSize = 0
+        $archiveDeletedSize = 0
+        if ($archivestats.TotalItemSize -ne $null -and $archivestats.TotalItemSize.Value -ne $null) {
+            $archiveSize = $archivestats.TotalItemSize.Value.ToMB()
+        }
+        if ($archivestats.TotalDeletedItemSize -ne $null -and $archivestats.TotalDeletedItemSize.Value -ne $null) {
+            $archiveDeletedSize = $archivestats.TotalDeletedItemSize.Value.ToMB()
+        }
+        $totalArchiveSize = $archiveSize + $archiveDeletedSize
+        
+        $archiveItems = "n/a"
+        if ($archivestats.ItemCount -ne $null) {
+            $archiveItems = $archivestats.ItemCount
+        }
+
+        $userObj | Add-Member NoteProperty -Name "Total Archive Size (Mb)" -Value $totalArchiveSize
+        $userObj | Add-Member NoteProperty -Name "Archive Size (Mb)" -Value $archiveSize
+        $userObj | Add-Member NoteProperty -Name "Archive Deleted Item Size (Mb)" -Value $archiveDeletedSize
+        $userObj | Add-Member NoteProperty -Name "Archive Items" -Value $archiveItems
     }
 
     $userObj | Add-Member NoteProperty -Name "Audit Enabled" -Value $mb.AuditEnabled
@@ -312,10 +363,15 @@ foreach ($mb in $mailboxes) {
     $userObj | Add-Member NoteProperty -Name "Hidden From Address Lists" -Value $mb.HiddenFromAddressListsEnabled
     $userObj | Add-Member NoteProperty -Name "Use Database Quota Defaults" -Value $mb.UseDatabaseQuotaDefaults
     
-    if ($mb.UseDatabaseQuotaDefaults -eq $true) {
+    if ($mb.UseDatabaseQuotaDefaults -eq $true -and $primarydb -ne $null) {
         $userObj | Add-Member NoteProperty -Name "Issue Warning Quota" -Value $primarydb.IssueWarningQuota
         $userObj | Add-Member NoteProperty -Name "Prohibit Send Quota" -Value $primarydb.ProhibitSendQuota
         $userObj | Add-Member NoteProperty -Name "Prohibit Send Receive Quota" -Value $primarydb.ProhibitSendReceiveQuota
+    }
+    elseif ($mb.UseDatabaseQuotaDefaults -eq $true -and $primarydb -eq $null) {
+        $userObj | Add-Member NoteProperty -Name "Issue Warning Quota" -Value "n/a"
+        $userObj | Add-Member NoteProperty -Name "Prohibit Send Quota" -Value "n/a"
+        $userObj | Add-Member NoteProperty -Name "Prohibit Send Receive Quota" -Value "n/a"
     }
     elseif ($mb.UseDatabaseQuotaDefaults -eq $false) {
         $userObj | Add-Member NoteProperty -Name "Issue Warning Quota" -Value $mb.IssueWarningQuota
@@ -328,19 +384,26 @@ foreach ($mb in $mailboxes) {
     $userObj | Add-Member NoteProperty -Name "Last Mailbox Logon" -Value $lastlogon
     $userObj | Add-Member NoteProperty -Name "Last Logon By" -Value $stats.LastLoggedOnUserAccount
     
+    $primaryServer = $null
+    if ($primarydb -ne $null) {
+        $primaryServer = $primarydb.MasterServerOrAvailabilityGroup
+    }
+    $archiveServer = $null
+    if ($archivedb -ne $null) {
+        $archiveServer = $archivedb.MasterServerOrAvailabilityGroup
+    }
 
     $userObj | Add-Member NoteProperty -Name "Primary Mailbox Database" -Value $mb.Database
-    $userObj | Add-Member NoteProperty -Name "Primary Server/DAG" -Value $primarydb.MasterServerOrAvailabilityGroup
+    $userObj | Add-Member NoteProperty -Name "Primary Server/DAG" -Value $primaryServer
 
     $userObj | Add-Member NoteProperty -Name "Archive Mailbox Database" -Value $mb.ArchiveDatabase
-    $userObj | Add-Member NoteProperty -Name "Archive Server/DAG" -Value $archivedb.MasterServerOrAvailabilityGroup
+    $userObj | Add-Member NoteProperty -Name "Archive Server/DAG" -Value $archiveServer
 
     $userObj | Add-Member NoteProperty -Name "Primary Email Address" -Value $mb.PrimarySMTPAddress
     $userObj | Add-Member NoteProperty -Name "Organizational Unit" -Value $user.OrganizationalUnit
 
-	
     #Add the object to the report
-    $report = $report += $userObj
+    $report += $userObj
 }
 
 #Catch zero item results
@@ -365,8 +428,6 @@ else {
 if ($SendEmail) {
 
     $topmailboxeshtml = $report | Sort "Total Mailbox Size (Mb)" -Desc | Select -First $top | Select DisplayName, Title, Department, Office, "Total Mailbox Size (Mb)" | ConvertTo-Html -Fragment
-
-    $reporthtml = $report | ConvertTo-Html -Fragment
 
     $htmlhead = "<html>
 				<style>
