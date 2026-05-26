@@ -85,6 +85,8 @@ These scripts execute on local systems, interact with Active Directory Domain Se
 | Script File Path | Description |
 | :--- | :--- |
 | **`OnPremises_Scripts/Exchange_Management/Mailboxtypes.ps1`** | Imports samAccountNames from a CSV file to enable Exchange Remote Mailboxes (Hybrid Exchange setups connecting local AD objects to Exchange Online). |
+| **`OnPremises_Scripts/Exchange_Management/Exchange 2019 or SE Assestment/HealthChecker.ps1`** | Checks the target Exchange 2019 or SE server for configuration recommendations and potential issues from the Microsoft Exchange Product Group. |
+| **`OnPremises_Scripts/Exchange_Management/Exchange 2019 or SE Assestment/Mailbox_assestment.ps1`** | Generates detailed statistics reports (mailbox sizes, recovery sizes, folders stats, and quotas) for all or selected Exchange mailboxes. |
 | **`OnPremises_Scripts/Intune/EndpointScripts/DriveMapping.ps1`** | Runs on client computers (distributed via Intune) to map physical on-premises network drives and share locations based on user AD groups. |
 | **`OnPremises_Scripts/Intune/EndpointScripts/DriveMappingJson.ps1`** | A modernized drive mapper that consumes a JSON file outlining server UNC paths to dynamically map on-premises drives for clients. |
 | **`OnPremises_Scripts/Intune/EndpointScripts/PrinterMapping.ps1`** | Dynamically maps active on-premises network printers and setups TCP/IP printing ports on the local client machine. |
