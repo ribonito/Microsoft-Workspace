@@ -264,9 +264,9 @@ foreach ($mb in $mailboxes) {
         $archivestats = "n/a"
     }
 
-    $inboxstats = Get-MailboxFolderStatistics $mb -FolderScope Inbox | Where { $_.FolderPath -eq "/Inbox" }
-    $sentitemsstats = Get-MailboxFolderStatistics $mb -FolderScope SentItems | Where { $_.FolderPath -eq "/Sent Items" }
-    $deleteditemsstats = Get-MailboxFolderStatistics $mb -FolderScope DeletedItems | Where { $_.FolderPath -eq "/Deleted Items" }
+    $inboxstats = Get-MailboxFolderStatistics $mb -FolderScope Inbox | Where-Object { $_.FolderPath -eq "/Inbox" }
+    $sentitemsstats = Get-MailboxFolderStatistics $mb -FolderScope SentItems | Where-Object { $_.FolderPath -eq "/Sent Items" }
+    $deleteditemsstats = Get-MailboxFolderStatistics $mb -FolderScope DeletedItems | Where-Object { $_.FolderPath -eq "/Deleted Items" }
     #FolderandSubFolderSize.ToMB()
 
     $lastlogon = $stats.LastLogonTime
@@ -276,11 +276,11 @@ foreach ($mb in $mailboxes) {
     
     $primarydb = $null
     if ($mb.Database -ne $null) {
-        $primarydb = $mailboxdatabases | where { $_.Name -eq $mb.Database.Name }
+        $primarydb = $mailboxdatabases | Where-Object { $_.Name -eq $mb.Database.Name }
     }
     $archivedb = $null
     if ($mb.ArchiveDatabase -ne $null) {
-        $archivedb = $mailboxdatabases | where { $_.Name -eq $mb.ArchiveDatabase.Name }
+        $archivedb = $mailboxdatabases | Where-Object { $_.Name -eq $mb.ArchiveDatabase.Name }
     }
 
     #Create a custom PS object to aggregate the data we're interested in
@@ -427,7 +427,7 @@ else {
 
 if ($SendEmail) {
 
-    $topmailboxeshtml = $report | Sort "Total Mailbox Size (Mb)" -Desc | Select -First $top | Select DisplayName, Title, Department, Office, "Total Mailbox Size (Mb)" | ConvertTo-Html -Fragment
+    $topmailboxeshtml = $report | Sort-Object "Total Mailbox Size (Mb)" -Desc | Select-Object -First $top | Select-Object DisplayName, Title, Department, Office, "Total Mailbox Size (Mb)" | ConvertTo-Html -Fragment
 
     $htmlhead = "<html>
 				<style>
@@ -447,8 +447,6 @@ if ($SendEmail) {
                 <h1 align=""center"">Exchange Server Mailbox Report</h1>
                 <h3 align=""center"">Generated: $now</h3>
                 <p>Report of Exchange mailboxes. Top $top mailboxes are listed below. Full list of mailboxes is in the CSV file attached to this email.</p>"
-    
-    $spacer = "<br />"
 
     $htmltail = "</body></html>"
 
