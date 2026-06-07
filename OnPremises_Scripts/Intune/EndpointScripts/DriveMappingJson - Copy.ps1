@@ -1,6 +1,6 @@
-﻿<#
+<#
 .DESCRIPTION
-	This script writes drive mappings defined in MappingsJson valiable to a json file on the client system to be read and applied by DriveMapping script installed in the system as a scheduled task
+	This script writes drive mappings defined in MappingsJson variable to a json file on the client system to be read and applied by DriveMapping script installed in the system as a scheduled task
 #>
 
 [CmdletBinding()]

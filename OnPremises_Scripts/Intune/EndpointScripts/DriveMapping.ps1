@@ -27,7 +27,7 @@ function Get-ADGroupMembership {
 
 			if ([string]::IsNullOrEmpty($env:USERDNSDOMAIN) -and [string]::IsNullOrEmpty($searchRoot)) {
 				Write-Error "Security group filtering won't work because `$env:USERDNSDOMAIN is not available!"
-				Write-Warning "You can override your AD Domain in the `$overrideUserDnsDomain variable"
+				Write-Warning "You can override your AD Domain in the `$searchRoot variable"
 			}
 			else {
 

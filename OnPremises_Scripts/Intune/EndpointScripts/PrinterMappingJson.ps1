@@ -1,6 +1,6 @@
-﻿<#
+<#
 .DESCRIPTION
-	This script writes drive mappings defined in MappingsJson valiable to a json file on the client system to be read and applied by DriveMapping script installed in the system as a scheduled task
+	This script writes printer mappings defined in MappingsJson variable to a json file on the client system to be read and applied by PrinterMapping script installed in the system as a scheduled task
 #>
 
 [CmdletBinding()]
@@ -13,8 +13,7 @@ Param()
 Start-Transcript -Path $(Join-Path "$env:temp" "PrinterMappingJson.log")
 
 ###########################################################################################
-# Define drive mappings here. To remove mappings, make an empty json.
-# If RemoveStaleDrives is enabled all mounted PSdrives from filesystem except os drives get disconnected if not specified in drivemapping config
+# Define printer mappings here. To remove mappings, make an empty json.
 ###########################################################################################
 $MappingsJson = @'
 {

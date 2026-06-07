@@ -1,4 +1,4 @@
-﻿# Remediation script for rename hybrid joined device operation
+# Remediation script for rename hybrid joined device operation
 # device name stored in the computer autopilot record is used to set the name of the device
 
 # Configuration
@@ -8,7 +8,15 @@ $ClientSecret = "WUo8Q~2wxmApVln5ULJ8H6Y1qd2Dp4Hkn6nIzcdE"
 
 # Start logging
 $DateTime = Get-Date -Format "MM-dd-yyyy-HH-mm"
-$LogPath = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\SetHHADJComputerName-remediate.log"
+$LogDir = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs"
+if (-not (Test-Path $LogDir)) {
+    $null = New-Item -Path $LogDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+}
+if (-not (Test-Path $LogDir)) {
+    $LogPath = Join-Path $env:TEMP "SetHHADJComputerName-remediate.log"
+} else {
+    $LogPath = Join-Path $LogDir "SetHHADJComputerName-remediate.log"
+}
 Start-Transcript $LogPath -Append
 Write-Host "----------------------------------------------------"
 Write-Host "$(Get-Date):  Script started"
@@ -16,7 +24,6 @@ Write-Host "$(Get-Date):  Script started"
 #Install required modules if not present
 Install-PackageProvider -Name NuGet -Confirm:$false -Force:$true
 Install-Module -Name Microsoft.Graph.Authentication -Confirm:$false -Force:$true
-Install-Module -Name Microsoft.Graph.Intune -Confirm:$false -Force:$true
 
 # Convert the client secret to a secure string
 $ClientSecretPass = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
@@ -42,7 +49,7 @@ $ApiVersion = "beta"
 
 #Get the Autopilot record with specified serial number to get the name set in the AP record
 $Uri = "$ApiVersion/deviceManagement/windowsAutopilotDeviceIdentities$QueryFilter"
-$DeviceNameAP = $(Invoke-MgGraphRequest -Uri $Uri | Get-MSGraphAllPages).Value.displayName
+$DeviceNameAP = (Invoke-MgGraphRequest -Uri $Uri -Method GET).Value.displayName
 
 if($DeviceNameAP -eq "" -or $DeviceNameAP -eq $null) {
     Write-Host "Device name in Autopilot record is empty or cannot get it from MSGraph. Rename cannot happen at this time."
@@ -63,8 +70,13 @@ if($DeviceNameAP -eq "" -or $DeviceNameAP -eq $null) {
             Write-Host "Device is joined to AD domain: $($details.CsDomain)"
 
             # Make sure we have connectivity
-            $dcInfo = [ADSI]"LDAP://RootDSE"
-            if ($null -eq $dcInfo.dnsHostName) {
+            try {
+                $dcInfo = [ADSI]"LDAP://RootDSE"
+                $dnsHostName = $dcInfo.dnsHostName
+            } catch {
+                $dnsHostName = $null
+            }
+            if ($null -eq $dnsHostName) {
                 Write-Host "No connectivity to the domain, unable to rename at this point."
                 Stop-Transcript
                 Exit 1

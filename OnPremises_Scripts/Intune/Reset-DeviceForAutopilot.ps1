@@ -1,4 +1,4 @@
-﻿    [CmdletBinding()]
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$SerialNumber,
@@ -17,19 +17,17 @@
         [boolean]$WaitForReset = $false
     )
 
-Import-Module Microsoft.Graph.Intune
+Import-Module Microsoft.Graph.Authentication
 #Connect-MSGraph | Out-Null
-#Sing-in to MS Graph interactively with required scope
+#Sign-in to MS Graph interactively with required scope
 Connect-MgGraph -Scopes "Device.ReadWrite.All","User.Read.All","DeviceManagementManagedDevices.ReadWrite.All","DeviceManagementConfiguration.ReadWrite.All","DeviceManagementServiceConfig.ReadWrite.All" -NoWelcome
 
 #Set filter
 $QueryFilter = "?`$filter=contains(serialNumber,'$SerialNumber')"
 
-#Get the Autopilot record with spoecified serial number to find its ID
+#Get the Autopilot record with specified serial number to find its ID
 $Uri = "$ApiVersion/deviceManagement/windowsAutopilotDeviceIdentities$QueryFilter"
-$DeviceAP = $(Invoke-MgGraphRequest -Uri $Uri | Get-MSGraphAllPages).Value
-#$DeviceApId = $(Invoke-MgGraphRequest -Uri $Uri | Get-MSGraphAllPages).Value.id
-#$DeviceManId = $(Invoke-MgGraphRequest -Uri $Uri | Get-MSGraphAllPages).Value.managedDeviceId
+$DeviceAP = (Invoke-MgGraphRequest -Uri $Uri -Method GET).Value
 
 # If device is found
 if ($DeviceAP) {

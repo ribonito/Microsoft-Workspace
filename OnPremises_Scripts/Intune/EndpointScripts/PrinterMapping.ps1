@@ -27,7 +27,7 @@ function Get-ADGroupMembership {
 
 			if ([string]::IsNullOrEmpty($env:USERDNSDOMAIN) -and [string]::IsNullOrEmpty($searchRoot)) {
 				Write-Error "Security group filtering won't work because `$env:USERDNSDOMAIN is not available!"
-				Write-Warning "You can override your AD Domain in the `$overrideUserDnsDomain variable"
+				Write-Warning "You can override your AD Domain in the `$searchRoot variable"
 			}
 			else {
 
@@ -166,20 +166,25 @@ if (-not (Test-RunningAsSystem)) {
 
 		Try {
 			Write-Output "Get the status of the printer '$($Printer.PrintServer)' on the print server"
-			$PrinterServerStatus = (Get-Printer -ComputerName (([URI]($Printer.PrintServer)).host) -Name $Printer.PrinterName).PrinterStatus
+			$PrinterServerStatus = "Online"
+			Try {
+				$PrinterServerStatus = (Get-Printer -ComputerName (([URI]($Printer.PrintServer)).host) -Name $Printer.PrinterName -ErrorAction Stop).PrinterStatus
+			} Catch {
+				Write-Warning "Could not query printer status from remote print server: $_. Proceeding anyway."
+			}
 			# Only perform check if the printer on the print server is not offline
 			If ($PrinterServerStatus -ne "Offline") {
-				# Throw error is printer doesn't exist
+				# Map printer if it doesn't already exist locally
 				If (!(Get-Printer -Name $Printer.PrintServer -ErrorAction SilentlyContinue)){
 					Write-Output "Printer not mapped, adding '$($Printer.PrintServer)'"
 					Add-Printer -ConnectionName $Printer.PrintServer
-					if($Printer.Default -eq 1){
-						$printer = Get-CimInstance -Class Win32_Printer -Filter "Name='$($Printer.PrintServer)'"
-						Invoke-CimMethod -InputObject $printer -MethodName SetDefaultPrinter
+					if($Printer.Default -eq 1 -or $Printer.Default -eq "1"){
+						$printerInstance = Get-CimInstance -Class Win32_Printer -Filter "Name='$($Printer.PrintServer)'"
+						Invoke-CimMethod -InputObject $printerInstance -MethodName SetDefaultPrinter
 					}
 				}
 			} else {
-				Write-Output "Printer is offline or Sppoler not running"
+				Write-Output "Printer is offline or Spooler not running"
 				$Printer
 			}
 		} Catch {

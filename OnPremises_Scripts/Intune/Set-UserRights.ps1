@@ -128,7 +128,15 @@ param
 )
 BEGIN
 {
-    $LogPath = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\Set-UserRights.log"
+    $LogDir = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs"
+    if (-not (Test-Path $LogDir)) {
+        $null = New-Item -Path $LogDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+    }
+    if (-not (Test-Path $LogDir)) {
+        $LogPath = Join-Path $env:TEMP "Set-UserRights.log"
+    } else {
+        $LogPath = Join-Path $LogDir "Set-UserRights.log"
+    }
     Start-Transcript $LogPath -Append
 	
 	Write-Output '==================================================================='
