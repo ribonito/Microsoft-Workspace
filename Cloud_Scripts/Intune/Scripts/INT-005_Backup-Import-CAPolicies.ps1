@@ -1,0 +1,201 @@
+<#
+.SYNOPSIS
+    INT-005 | Intune / Entra ID - Backup and Import Conditional Access Policies via Microsoft Graph.
+
+.DESCRIPTION
+    Exports all Conditional Access policies from an Entra ID tenant to JSON files,
+    or imports a previously exported policy JSON back into the tenant.
+
+    Mode 1 - BACKUP (default):
+        Calls Graph GET /identity/conditionalAccess/policies and exports each policy
+        to a timestamped folder as individual JSON files.
+
+    Mode 2 - IMPORT (-Import switch):
+        Reads the specified JSON file (-ImportJSON), strips read-only fields
+        (id, version, modifiedDateTime, createdDateTime, sessionControls)
+        and creates the policy via Graph POST.
+
+    Authentication options:
+        - App-only (Client Credentials): supply -ClientID, -ClientSecret, -TenantId
+        - Delegated (interactive AzureAD): supply -DelegateClientID
+
+.PRODUCT
+    Microsoft Entra ID / Conditional Access / Microsoft Graph
+
+.ORIGINAL_AUTHOR
+    euc365.com
+    Reference: https://euc365.com/post/backup-and-import-conditional-access-policies/
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (INT-005 classification & English header)
+
+.VERSION
+    1.1
+
+.PARAMETER ClientID
+    App Registration Client ID for client credentials (app-only) auth.
+
+.PARAMETER ClientSecret
+    App Registration Client Secret.
+
+.PARAMETER TenantId
+    Azure Tenant ID (GUID).
+
+.PARAMETER DelegateClientID
+    App Registration Client ID for delegated (interactive) auth.
+
+.PARAMETER OutputFolder
+    Path to store exported JSON files. Default: ".ConditionalAccessPolicyBackup" (timestamped).
+
+.PARAMETER Import
+    Switch. When present, runs in import mode.
+
+.PARAMETER ImportJSON
+    Path to the JSON file to import. Required when -Import is used.
+
+.EXAMPLE
+    # Backup all CA policies (app-only auth)
+    .\INT-005_Backup-Import-CAPolicies.ps1 -ClientID "xxx" -ClientSecret "yyy" -TenantId "zzz"
+
+.EXAMPLE
+    # Import a single CA policy
+    .\INT-005_Backup-Import-CAPolicies.ps1 -DelegateClientID "xxx" -Import -ImportJSON "C:\temp\policy.json"
+
+.NOTES
+    - Reference: https://euc365.com/post/backup-and-import-conditional-access-policies/
+    - Token helper reference: https://morgantechspace.com/2019/08/get-graph-api-access-token-using-client-id-and-client-secret.html
+#>
+
+#region ── Parameters ─────────────────────────────────────────────────────────
+param(
+    [Parameter(DontShow = $true)]
+    [string]
+    $MsGraphVersion = "beta",
+    [Parameter(DontShow = $true)]
+    [string]
+    $MsGraphHost = "graph.microsoft.com",
+    # The AzureAD ClientID (Application ID) of your registered AzureAD App with Delegate permissions
+    [string]
+    $DelegateClientID,
+    # The AzureAD ClientID (Application ID) of your registered AzureAD App
+    [string]
+    $ClientID,
+    # The Client Secret for your AzureAD App
+    [string]
+    $ClientSecret,
+    # Your Azure Tenant ID
+    [string]
+    $TenantId,
+    [Parameter()]
+    [string]
+    $OutputFolder = ".ConditionalAccessPolicyBackup",
+    [switch]
+    $Import,
+    [string]
+    $ImportJSON
+)
+#endregion
+
+#region ── Helper Functions ───────────────────────────────────────────────────
+function Connect-AzAD_Token ($DelegateID) {
+    Write-Host -ForegroundColor Cyan "Checking for AzureAD module..."
+    $AADMod = Get-Module -Name "AzureAD" -ListAvailable
+
+    if (!($AADMod)) {
+        Write-Host -ForegroundColor Yellow "AzureAD PowerShell module not found, looking for AzureADPreview..."
+        $AADModPrev = Get-Module -Name "AzureADPreview" -ListAvailable
+        if ($AADModPrev) {
+            $AADMod = Get-Module -Name "AzureADPreview" -ListAvailable
+        } else {
+            try {
+                Write-Host -ForegroundColor Yellow "AzureAD Preview is not installed..."
+                Write-Host -ForegroundColor Cyan "Attempting to install the AzureAD PowerShell module..."
+                Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -ErrorAction Stop | Out-Null
+                Install-Module AzureAD -Force -ErrorAction Stop
+            }
+            catch {
+                Write-Host -ForegroundColor Red "Failed to install the AzureAD PowerShell Module: `n $($Error[0])"
+                break 
+            }
+        }
+    } else {
+        Write-Host -ForegroundColor Green "AzureAD PowerShell Module Found"
+    }
+
+    $AADMod = ($AADMod | Select-Object -Unique | Sort-Object)[-1]
+    
+    $ADAL = Join-Path $AADMod.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+    $ADALForms = Join-Path $AADMod.ModuleBase "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
+    [System.Reflection.Assembly]::LoadFrom($ADAL) | Out-Null
+    [System.Reflection.Assembly]::LoadFrom($ADALForms) | Out-Null
+
+    $UserInfo = Connect-AzureAD
+
+    $MIPEAClientID = $DelegateID
+    $RedirectURI = "urn:ietf:wg:oauth:2.0:oob"
+    Write-Host -ForegroundColor Cyan "Connected to Tenant: $($UserInfo.TenantID)"
+    $Auth = "https://login.microsoftonline.com/$($UserInfo.TenantID)"
+
+    try {
+        $AuthContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $Auth
+        $platformParameters = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.PlatformParameters" -ArgumentList "Auto"
+        $userId = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserIdentifier" -ArgumentList ($UserInfo.Account, "OptionalDisplayableId")
+        $authResult = $AuthContext.AcquireTokenAsync(("https://" + $MSGraphHost), $MIPEAClientID, $RedirectURI, $platformParameters, $userId).Result
+        if ($authResult.AccessToken) {
+            $AADAccessToken = $authResult.AccessToken
+            return $AADAccessToken
+        } else {
+            Write-Host -ForegroundColor Red "Authorization Access Token is null, please re-run authentication..."
+            break
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red $_.Exception.Message
+        Write-Host -ForegroundColor Red $_.Exception.ItemName
+        break
+    }
+}
+#endregion
+
+#region ── Authentication ─────────────────────────────────────────────────────
+if (($ClientID) -and ($ClientSecret) -and ($TenantId)) {
+    # Create the body of the Authentication request for the OAuth Token
+    $Body = @{client_id=$ClientID; client_secret=$ClientSecret; grant_type="client_credentials"; scope="https://$MSGraphHost/.default";}
+    # Get the OAuth Token 
+    $OAuthReq = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Body $Body
+    # Set your access token as a variable
+    $global:AccessToken = $OAuthReq.access_token
+} else {
+    if (!($DelegateClientID)) {
+        Write-Host -ForegroundColor Red "You must specify a ClientID with correct delegate permissions and URI redirect configuration"
+        break
+    }
+    $global:AccessToken = Connect-AzAD_Token -DelegateID $DelegateClientID
+}
+#endregion
+
+#region ── Main Program ───────────────────────────────────────────────────────
+if (!($Import)) {
+    $FormattedOutputFolder = "$OutputFolder$(Get-Date -Format yyyyMMdd_HH-mm-ss)"
+
+    if (!(Test-Path $FormattedOutputFolder)) {
+        try {
+            mkdir $FormattedOutputFolder -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Host -ForegroundColor Red "Failed to create $FormattedOutputFolder"
+            $Error[0]
+            break
+        }
+    }
+
+    Invoke-RestMethod -Method GET -Uri "https://$MSGraphHost/$MsGraphVersion/identity/conditionalAccess/policies" -Headers @{Authorization = "Bearer $AccessToken"} -ContentType "application/json" | Select-Object -ExpandProperty "Value" | ForEach-Object {
+       $_ | ConvertTo-Json -Depth 10 | Out-File "$FormattedOutputFolder/$($_.displayname).json"
+    } 
+    Write-Host -ForegroundColor Green "Backup completed successfully. Saved to: $FormattedOutputFolder"
+} elseif ($Import) {
+    $JSON = Get-Content $ImportJSON | ConvertFrom-Json | Select-Object -Property * -ExcludeProperty Version, modifiedDateTime, CreatedDateTime, id, sessionControls | ConvertTo-Json -Depth 10
+    Invoke-RestMethod -Method POST -Uri "https://$MSGraphHost/$MsGraphVersion/identity/conditionalAccess/policies" -Headers @{Authorization = "Bearer $AccessToken"} -Body $JSON -ContentType "application/json"    
+    Write-Host -ForegroundColor Green "Policy imported successfully from: $ImportJSON"
+}
+#endregion
