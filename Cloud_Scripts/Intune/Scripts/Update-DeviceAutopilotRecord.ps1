@@ -1,39 +1,59 @@
-﻿<#
+<#
 .SYNOPSIS
-Update autopilot record of a device or a list of devices
+    INT-003 | Intune / Autopilot - Update Autopilot Device Record (single or bulk via CSV).
 
 .DESCRIPTION
-Update autopilot record of a device or a list of devices
+    Updates the Autopilot device record for one or more devices via Microsoft Graph.
+    Supports single device updates (by serial number) or bulk updates from a CSV file.
+
+    Updateable fields per device:
+        - Group Tag
+        - Assigned User UPN
+        - Device Display Name
+
+    After all updates, triggers a sync of the Autopilot registry.
+
+    CSV file format (for bulk mode):
+        SerialNumber, DeviceName, AssignedUserUPN, groupTag
+
+.PRODUCT
+    Microsoft Intune / Windows Autopilot / Microsoft Graph
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
 
 .PARAMETER SerialNumber
-Serial number of the device to be configured. Required for a single device.
+    Serial number of the device to be configured. Required for single device mode.
 
 .PARAMETER GroupTag
-Group tag to be set for the device. Optional for a single device.
+    Group tag to be set for the device. Optional for a single device.
 
 .PARAMETER UserUPN
-UPN of the user to be assigned to the device. Optional for a single device.
+    UPN of the user to be assigned to the device. Optional for a single device.
 
 .PARAMETER DeviceName
-The name of the device. Optional for a single device.
+    The display name of the device. Optional for a single device.
 
 .PARAMETER CSVFile
-Full path to the CSV file containing a list of devices to be configured. Required for a single device.
+    Full path to the CSV file containing a list of devices to be configured (bulk mode).
 
 .PARAMETER ApiVersion
-Optional parameter to the version of MS graph API.
+    Optional. API version to use: "v1.0" or "Beta". Defaults to "Beta".
 
 .EXAMPLE
-Update-DeviceAutopilotRecord -CSVFile C:\temp\devices.csv -ApiVersion "v1.0"
+    .\INT-003_Update-DeviceAutopilotRecord.ps1 -CSVFile C:\temp\devices.csv -ApiVersion "v1.0"
 
 .EXAMPLE
-Update-DeviceAutopilotRecord -SerialNumber SJ48FJNW8 -GroupTag SRMW-AADJ-FR -UserUPN harry.potter@sunlab.ch -DeviceName PC0001
+    .\INT-003_Update-DeviceAutopilotRecord.ps1 -SerialNumber SJ48FJNW8 -GroupTag AADJ-FR -UserUPN harry@contoso.com -DeviceName PC0001
 
 .NOTES
-Requires Microsoft.Graph.Intune PowerShell Module
-
-Connect to MSGraph first, using the 'Connect-Graph' cmdlet.
+    Requires Microsoft.Graph.Intune PowerShell Module.
+    Connect to MSGraph first using the Connect-MgGraph cmdlet.
 #>
+
 
 [CmdletBinding()]
 param(

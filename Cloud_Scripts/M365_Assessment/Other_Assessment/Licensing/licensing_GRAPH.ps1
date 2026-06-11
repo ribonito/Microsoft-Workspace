@@ -1,10 +1,47 @@
+<#
+.SYNOPSIS
+    M365-007 | M365 Assessment - Export M365 Licensing SKUs and Service Plans to CSV via Microsoft Graph.
+
+.DESCRIPTION
+    Uses the Microsoft Graph PowerShell SDK to extract all licensing SKUs and service plans
+    in the tenant and maps them to their human-readable display names.
+
+    Steps:
+        1. Downloads the Microsoft licensing reference CSV from your local C:\temp folder
+           (from: https://docs.microsoft.com/azure/active-directory/enterprise-users/licensing-service-plan-reference)
+        2. Retrieves all subscribed SKUs in the tenant
+        3. Exports SKU data with friendly display names to: C:\temp\SkuDataComplete.csv
+        4. Exports service plan data to: C:\temp\ServicePlanDataComplete.csv
+
+    Prerequisite: Download the product names CSV from Microsoft and place it in C:\temp before running.
+
+.PRODUCT
+    Microsoft 365 Licensing / Microsoft Graph
+
+.ORIGINAL_AUTHOR
+    Practical365.com
+    Reference: https://practical365.com/create-licensing-report-microsoft365-tenant/
+    Script: CreateCSVFilesForSKUsAndServicePlans.PS1
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (M365-007 classification & English header)
+
+.VERSION
+    1.1
+
+.NOTES
+    - Module: Microsoft.Graph.Identity.DirectoryManagement (Get-MgSubscribedSku)
+    - Required scope: Directory.Read.All
+    - Pre-download the licensing reference CSV from Microsoft Docs before running
+    - Output files: C:\temp\SkuDataComplete.csv, C:\temp\ServicePlanDataComplete.csv
+
+.EXAMPLE
+    .\M365-007_Licensing-SKU-Export.ps1
+#>
+
 # CreateCSVFilesForSKUsAndServicePlans.PS1
-# A script to grab the SKU (products) used in a Microsoft 365 tenant and extract SKU and service plan information
-# into CSV files so that they can be edited (to add display name information) and then used to generate a licensing
-# report for the tenant.
 # See https://practical365.com/create-licensing-report-microsoft365-tenant/ for the article relating to this code
-# Uses cmdlets from the Microsoft Graph SDK for PowerShell
-# Connect to the Graph, specifing the tenant and profile to use - Add your tenant identifier here
+
 Connect-MgGraph -Scope Directory.Read.All -NoWelcome
 
 #Import the Product names and service plan identifiers for licensing CSV file downloaded from https://docs.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference

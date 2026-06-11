@@ -1,5 +1,49 @@
-﻿#This script requires IntuneBackupAndRestore module
-#Install-Module IntuneBackupAndRestore -Force
+<#
+.SYNOPSIS
+    INT-002 | Intune - Full Intune Configuration Backup to JSON.
+
+.DESCRIPTION
+    Performs a comprehensive backup of an Intune tenant configuration by exporting
+    all policy objects as individual JSON files. Covers:
+        - Device Enrollment Configurations (and their assignments)
+        - Autopilot Deployment Profiles (and their assignments)
+        - Conditional Access Policies (via Microsoft Graph)
+        - Entra ID / AAD Groups (filtered by prefix "SRMW_")
+
+    Uses the IntuneBackupAndRestore module (Start-IntuneBackup) as the primary
+    backup engine, supplemented by custom functions for additional object types.
+
+    Output structure:
+        <RootPath>\<timestamp>\
+            Device Enrollment\
+            Autopilot Deployment Profiles\
+            Conditional Access Policies\
+            Groups\
+
+.PRODUCT
+    Microsoft Intune / Microsoft Graph / Entra ID
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.PARAMETER RootPath
+    Root folder where backups will be stored. A timestamped subdirectory is created automatically.
+
+.EXAMPLE
+    .\INT-002_Backup-FullIntuneConfig.ps1 -RootPath "D:\IntuneBackups"
+
+.NOTES
+    # Required modules:
+    # Install-Module IntuneBackupAndRestore -Force
+    # Install-Module Microsoft.Graph.Intune -Force
+    - Update $TenantID with your own tenant GUID
+#>
+
+# Required modules
+# Install-Module IntuneBackupAndRestore -Force
 
 [CmdletBinding()]
 param(

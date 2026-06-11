@@ -1,4 +1,43 @@
-# Sunrise detection script to turn off Windows copilot.
+<#
+.SYNOPSIS
+    INT-009 | Intune Proactive Remediation - DETECT: Turn Off Windows Copilot (All User Profiles).
+
+.DESCRIPTION
+    Detection script for an Intune Proactive Remediation package.
+    Checks all local user registry hives (HKU) to verify that the Windows Copilot
+    policy is set to disabled (TurnOffWindowsCopilot = 1) for each user profile.
+
+    Registry key checked (per user):
+        HKU\<SID>\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot
+        Value: TurnOffWindowsCopilot = 1 (DWORD)
+
+    Workaround for: Settings Catalog error 65000 on Windows with M365 Business Premium license.
+
+    Exit codes:
+        0 = All profiles have Copilot disabled (no remediation needed)
+        1 = At least one profile has Copilot enabled (remediation required)
+
+    Deploy paired with INT-010 (TurnOffWindowsCopilot-remediate.ps1).
+
+.PRODUCT
+    Microsoft Intune / Windows / Proactive Remediation
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.NOTES
+    - No modules required
+    - Handles both 32-bit and 64-bit process architecture (PROCESSOR_ARCHITEW6432 check)
+    - Deploy via Intune > Devices > Scripts and remediations
+
+.EXAMPLE
+    Run automatically by Intune Proactive Remediation (not called manually)
+#>
+
+# Detection script to turn off Windows Copilot for all user profiles
 # Workaround for Settings Catalog error 65000 on Windows with M365 Business Premium license
 
 If ($ENV:PROCESSOR_ARCHITEW6432 -eq "AMD64") {

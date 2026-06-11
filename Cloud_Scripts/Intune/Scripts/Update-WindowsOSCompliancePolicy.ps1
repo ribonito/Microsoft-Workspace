@@ -1,19 +1,42 @@
-﻿<#
+<#
 .SYNOPSIS
-Updates Sunrise standard Windows OS version device compliance policy
- 
+    INT-004 | Intune - Update Windows OS Compliance Policy to N-1 Patch Tuesday Build.
+
 .DESCRIPTION
-Updates Sunrise standard Windows OS version device compliance policy
-   
+    Automatically updates the Windows OS version range in a specified Intune Device Compliance
+    Policy to enforce the N-1 (previous) Patch Tuesday Windows build.
+
+    How it works:
+        1. Connects to Microsoft Graph with the required scopes
+        2. Retrieves the target Device Compliance Policy by name
+        3. Fetches the list of all Patch Tuesdays (±1 year)
+        4. For each OS build defined in the policy, queries Graph for available revisions
+        5. Filters revisions released on Patch Tuesdays and selects N-1 (one release back)
+        6. Updates the policy's lowestVersion with the N-1 build ID
+
+    This ensures devices are compliant with a "one version behind current" policy,
+    giving time for the latest update to be validated before enforcement.
+
+.PRODUCT
+    Microsoft Intune / Windows Update for Business / Microsoft Graph
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
 .PARAMETER tenantId
-ID of the Intune tenant.
-    
+    ID of the Intune tenant (GUID format).
+
 .EXAMPLE
-Update-SRWindowsOSCOmpliancePolicy -tenantId 0b57e92f-4bfc-4513-81af-dff5bed4c398f6a1
-    
+    .\INT-004_Update-WindowsOSCompliancePolicy.ps1 -tenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
 .NOTES
-Requires the Microsoft.Graph.Intune PowerShell Module
+    Requires the Microsoft.Graph.Intune PowerShell Module.
+    Policy name is hardcoded as $PolicyName = "SRMW-Win-Compliance-OS" — update as needed.
 #>
+
     
 [CmdletBinding()]
 param(

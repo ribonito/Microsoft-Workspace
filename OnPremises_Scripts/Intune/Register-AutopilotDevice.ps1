@@ -1,4 +1,44 @@
-[CmdletBinding()]
+<#
+.SYNOPSIS
+    INT-016 | Intune / Autopilot - Register a Device in Windows Autopilot (Hardware Hash Upload).
+
+.DESCRIPTION
+    Installs and runs the Get-WindowsAutopilotInfo script to capture the device's
+    hardware hash and either:
+        - Upload it directly to Intune Autopilot (online mode, default)
+        - Export it to a local CSV file (offline mode, with -Csv switch)
+
+    Uses app-only authentication (Client Credentials) to upload directly.
+
+.PRODUCT
+    Microsoft Intune / Windows Autopilot
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.PARAMETER Csv
+    Switch. If present, exports the hardware hash to .\RegInfo.csv instead of uploading online.
+
+.EXAMPLE
+    # Upload hardware hash directly to Intune Autopilot
+    .\INT-016_Register-AutopilotDevice.ps1
+
+.EXAMPLE
+    # Export hardware hash to CSV (for manual bulk import)
+    .\INT-016_Register-AutopilotDevice.ps1 -Csv
+
+.NOTES
+    - No pre-installed module required (script auto-installs get-windowsautopilotinfo)
+    - Requires NuGet package provider (auto-installed)
+    - Run on the target device as Administrator
+    - Update $ClientId, $TenantId, $ClientSecret before use
+    - The -Online flag uploads directly to your Autopilot tenant
+#>
+
+
 param(
         [Parameter(Mandatory = $false)]
         [switch]$Csv

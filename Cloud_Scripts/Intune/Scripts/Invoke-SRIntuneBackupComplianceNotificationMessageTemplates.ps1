@@ -1,4 +1,44 @@
-﻿function Invoke-SRIntuneBackupComplianceNotificationMessageTemplates {
+<#
+.SYNOPSIS
+    INT-008 | Intune - Backup Compliance Policy Notification Message Templates to JSON.
+
+.DESCRIPTION
+    Exports all Intune Compliance Policy Notification Message Templates (and their
+    localized messages) as JSON files to the specified backup path.
+
+    Output structure under the backup path:
+        Device Compliance Policies\Notification Templates\
+            <TemplateName>.json
+            LocalizedMessages\
+                <MessageId>.json
+
+    Designed to be used as part of a larger Intune backup automation workflow
+    (call this function alongside other Invoke-SRIntune* backup functions).
+
+.PRODUCT
+    Microsoft Intune / Microsoft Graph
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.PARAMETER Path
+    Root folder path where backup files will be stored.
+
+.EXAMPLE
+    # Import the function and call it:
+    . .\INT-008_Backup-ComplianceNotificationTemplates.ps1
+    Invoke-SRIntuneBackupComplianceNotificationMessageTemplates -Path "C:\IntuneBackup"
+
+.NOTES
+    - Module: Microsoft.Graph (Invoke-MgGraphRequest)
+    - Requires connection via Connect-MgGraph before calling the function
+    - Uncomment the last line to run immediately after loading
+#>
+
+
     <#
     .SYNOPSIS
     Backup Intune compliance notification message templates

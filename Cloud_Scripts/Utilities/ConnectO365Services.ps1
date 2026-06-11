@@ -1,21 +1,65 @@
-﻿<#
-=============================================================================================
-Name:           Connect to all the Microsoft services using PowerShell
-Description:    This script automatically installs all the required modules(upon your confirmation) and connects to the services
-Version:        4.0
-Website:        o365reports.com
+<#
+.SYNOPSIS
+    UTL-001 | Utility - Connect to All Microsoft 365 Services with a Single Script.
 
-1.This script connects to 9 Microsoft 365 services with a single cmdlet.
-2.Installs Microsoft 365 PowerShell modules. ie, Modules required for Microsoft 365 services are automatically downloaded and installed upon your confirmation.
-3.You can connect to one or more Microsoft 365 services via PowerShell using a single cmdlet. 
-4.You can connect to Microsoft 365 services with MFA enabled account. 
-5.For non-MFA account, you don’t need to enter credential for each service. 
-5.The script is scheduler friendly. i.e., credentials can be passed as a parameter instead of saving inside the script. 
-6.You can disconnect all service connections using a single cmdlet. 
-7.The script supports Certificate-Based Authentication (CBA) too.
+.DESCRIPTION
+    This script automatically installs all required PowerShell modules (upon confirmation)
+    and connects to up to 9 Microsoft 365 services in a single run.
 
-For detailed script execution: https://o365reports.com/2019/10/05/connect-all-office-365-services-powershell/
-============================================================================================
+    Supported services:
+        - Exchange Online
+        - Microsoft Teams
+        - SharePoint Online
+        - SharePoint PnP
+        - Security & Compliance Center
+        - MSOnline (Azure AD v1)
+        - Azure AD (v2)
+        - Microsoft Graph (v1.0)
+        - Microsoft Graph Beta
+
+    Key features:
+        1. Auto-installs missing modules on request
+        2. Supports MFA-enabled accounts
+        3. No repeated credential prompts for non-MFA accounts
+        4. Scheduler-friendly: accepts credentials as parameters
+        5. Single-cmdlet disconnect for all services
+        6. Supports Certificate-Based Authentication (CBA / app-only)
+
+.PRODUCT
+    Microsoft 365 (multi-service utility)
+
+.ORIGINAL_AUTHOR
+    AdminDroid Community - o365reports.com
+    Version 4.0
+    Reference: https://o365reports.com/2019/10/05/connect-all-office-365-services-powershell/
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (UTL-001 classification & English header)
+
+.VERSION
+    4.1
+
+.EXAMPLE
+    # Connect to all services interactively
+    .\UTL-001_Connect-O365Services.ps1
+
+    # Connect to specific services only
+    .\UTL-001_Connect-O365Services.ps1 -Services ExchangeOnline, MSTeams
+
+    # Certificate-Based Authentication (app-only)
+    .\UTL-001_Connect-O365Services.ps1 -CBA -AppId "xxxx" -CertificateThumbprint "AABB" -TenantId "yyyy" -TenantName "contoso.onmicrosoft.com"
+
+    # Disconnect all sessions
+    .\UTL-001_Connect-O365Services.ps1 -Disconnect
+
+.NOTES
+    ============================================================================================
+    Name:        Connect to all Microsoft services using PowerShell
+    Description: Auto-installs modules and connects to M365 services
+    Version:     4.0
+    Website:     o365reports.com
+    For detailed execution: https://o365reports.com/2019/10/05/connect-all-office-365-services-powershell/
+    ============================================================================================
 #>
 Param
 (

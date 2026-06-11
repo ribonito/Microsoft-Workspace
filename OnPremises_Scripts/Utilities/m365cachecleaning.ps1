@@ -1,31 +1,51 @@
 <#
 .SYNOPSIS
-    PowerShell script to clear cache for selected Microsoft 365 applications.
+    UTL-002 | Utility - Clear Cache for Microsoft 365 Applications (Interactive).
 
 .DESCRIPTION
-    This script allows users to clear cache for commonly used Microsoft 365 applications.
-    Cache files can sometimes cause performance issues, login errors, or unexpected
-    behavior in applications. Running this script helps refresh these applications 
-    by clearing out old cache files. It stops the application, clears specified cache 
-    directories, and optionally restarts the application.
+    This script allows users to selectively clear the cache for commonly used
+    Microsoft 365 desktop applications. Cache files can cause performance issues,
+    login errors, or unexpected behavior.
 
-.AUTHOR
+    For each selected application, the script:
+        1. Stops the application process (if running)
+        2. Deletes the cache directories (Cache, GPUCache, Temporary Files, IndexedDB, Local Storage)
+        3. Optionally restarts the application
+
+    Supported applications:
+        1. Microsoft Teams
+        2. OneDrive
+        3. Outlook
+        4. Microsoft Edge
+        5. Microsoft Word
+        6. Microsoft Excel
+        7. Microsoft OneNote
+
+.PRODUCT
+    Microsoft 365 Desktop Applications (Windows)
+
+.ORIGINAL_AUTHOR
     Mezba Uddin
+    Version: 1.0
+    Last Updated: 2024-11-06
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (UTL-002 classification & English header)
 
 .VERSION
-    1.0
-
-.LASTUPDATED
-    2024-11-06
+    1.1
 
 .NOTES
-    - No additional modules are required for this script.
-    - Make sure to save any work in the application before running the script, as it
-      will stop the application.
-    - This script is especially useful if you're experiencing lag, login issues, 
-      or unexpected behavior in Microsoft 365 apps.
+    - No additional PowerShell modules required
+    - Save any open work in the target application before running
+    - Especially useful when experiencing lag, login issues, or unexpected behavior
+    - Run as the affected user (not as Administrator) to access the correct AppData paths
 
+.EXAMPLE
+    .\UTL-002_Clear-M365AppCache.ps1
+    (Interactive menu — select the application to clear)
 #>
+
 
 # Define a function to clear cache for the selected application
 function Clear-Cache {

@@ -1,4 +1,50 @@
-﻿# Remediation script for rename hybrid joined device operation
+<#
+.SYNOPSIS
+    INT-015 | Intune Win32 App - Rename HAADJ (Entra-Joined) Device per Autopilot Record.
+
+.DESCRIPTION
+    Win32 app deployment script that renames an Hybrid Azure AD Joined (HAADJ) device
+    to the display name defined in its Windows Autopilot record.
+
+    Designed to run as an Intune Win32 App (not as a Proactive Remediation).
+    Logs execution to the Intune Management Extension log folder.
+
+    Flow:
+        1. Connects to Microsoft Graph using Client Credentials (app-only)
+        2. Retrieves the device serial number from WMI
+        3. Queries the Autopilot record for the expected device name
+        4. If device name matches → marks completion in registry and exits 0
+        5. If device is AD domain-joined and DC reachable → renames and schedules restart
+        6. Writes completion tag: HKLM\Software\Sunrise\Manage\HAADJComputerRename = 1
+
+    Exit codes:
+        0    = Rename not needed OR completed successfully
+        1    = Cannot rename (no connectivity, AP record empty, domain issue)
+        1641 = Hard reboot required (during OOBE/ESP)
+        3010 = Soft reboot scheduled in 60 minutes
+
+.PRODUCT
+    Microsoft Intune / Windows Autopilot / HAADJ / Win32 App
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.NOTES
+    - Module: Microsoft.Graph.Authentication, Microsoft.Graph.Intune (auto-installed by script)
+    - Requires App Registration with Device management Read permissions
+    - Logs to: %ProgramData%\Microsoft\IntuneManagementExtension\Logs\
+    - Update $ClientId, $TenantId, and $ClientSecret before deployment
+
+.EXAMPLE
+    Deploy via Intune as a Win32 app (.intunewin) with:
+        Install command: powershell.exe -File .\HAADJCompuerRename-app.ps1
+        Detection rule: Registry key HKLM\Software\Sunrise\Manage\HAADJComputerRename = 1
+#>
+
+# Remediation script for rename hybrid joined device operation
 # device name stored in the computer autopilot record is used to set the name of the device
 
 # Configuration

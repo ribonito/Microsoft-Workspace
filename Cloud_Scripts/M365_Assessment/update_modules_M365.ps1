@@ -1,16 +1,56 @@
+<#
+.SYNOPSIS
+    UTL-004 | Utility - Update and Maintain All Microsoft 365 PowerShell Modules.
+
+.DESCRIPTION
+    Checks for updates to a defined set of Microsoft 365 PowerShell modules from the
+    PowerShell Gallery and applies any available updates. After updating, removes older
+    versions of the same modules to keep the system clean.
+
+    Modules covered by default:
+        MicrosoftTeams, Microsoft.Graph, Microsoft.Graph.Beta, ExchangeOnlineManagement,
+        Microsoft.Online.Sharepoint.PowerShell, ORCA, Az.Accounts, Az.Automation,
+        AIPService, Az.Keyvault, Pnp.PowerShell, MSCommerce, Microsoft365DSC, MSAL.PS,
+        WhiteboardAdmin, ImportExcel, Microsoft.Identity.Client
+
+    Requires PowerShell 7+ and must be run as Administrator.
+
+.PRODUCT
+    Microsoft 365 (multi-module utility)
+
+.ORIGINAL_AUTHOR
+    Office 365 for IT Pros - https://github.com/12Knocksinna/Office365itpros
+    Script: UpdateOffice365PowerShellModules.PS1
+    Mentioned in Chapter 4 of "Office 365 for IT Pros"
+    V2.0 4-Dec-2022 | V2.1 9-Apr-2023 | V2.2 28-Apr-2023
+    V2.3 9-Jul-2023  (Microsoft Graph PowerShell SDK V2.0 support)
+    V2.4 12-Aug-2023 (PowerShell V5 and V7 compatibility)
+    V2.5 25-Oct-2024 (Admin rights check + PowerShell 7 check)
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (UTL-004 classification & English header)
+
+.VERSION
+    2.6
+
+.NOTES
+    - Requires PowerShell 7+
+    - Must be run as Administrator (elevated session)
+    - Reference: https://github.com/12Knocksinna/Office365itpros/blob/master/UpdateOffice365PowerShellModules.PS1
+    - For production use, review module list and validate in non-production first
+
+.EXAMPLE
+    .\UTL-004_Update-M365PSModules.ps1
+#>
+
 # UpdateOffice365PowerShellModules.PS1
 # Mentioned in Chapter 4 of Office 365 for IT Pros
-# V2.0 4-Dec-2022
-# V2.1 9-Apr-2023
-# V2.2 28-Apr-2023
-# V2.3 9-Jul-2023 include support for Microsoft Graph PowerShell SDK V2.0
-# V2.4 12-Aug-2023 Make sure that everything works well for PowerShell V5 and V7
-# V2.5 25-Oct-2024 Add check for admin rights and PowerShell 7
+# V2.0 4-Dec-2022 | V2.1 9-Apr-2023 | V2.2 28-Apr-2023
+# V2.3 9-Jul-2023 - Microsoft Graph PowerShell SDK V2.0 support
+# V2.4 12-Aug-2023 - PowerShell V5 and V7 compatibility
+# V2.5 25-Oct-2024 - Admin rights check and PowerShell 7 requirement
 # https://github.com/12Knocksinna/Office365itpros/blob/master/UpdateOffice365PowerShellModules.PS1
-# Very simple script to check for updates to a defined set of PowerShell modules used to manage Office 365 services
-# If an update for a module is found, it is downloaded and applied.
-# Once all modules are checked for updates, we remove older versions that might be present on the workstation. V2.1 improves the processing of Microsoft Graph SDK sub-modules
-#  
+
 
 # Check that we have administrator rights to install and update modules
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)

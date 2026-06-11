@@ -1,3 +1,71 @@
+<#
+.SYNOPSIS
+    INT-005 | Intune / Entra ID - Backup and Import Conditional Access Policies via Microsoft Graph.
+
+.DESCRIPTION
+    Exports all Conditional Access policies from an Entra ID tenant to JSON files,
+    or imports a previously exported policy JSON back into the tenant.
+
+    Mode 1 - BACKUP (default):
+        Calls Graph GET /identity/conditionalAccess/policies and exports each policy
+        to a timestamped folder as individual JSON files.
+
+    Mode 2 - IMPORT (-Import switch):
+        Reads the specified JSON file (-ImportJSON), strips read-only fields
+        (id, version, modifiedDateTime, createdDateTime, sessionControls)
+        and creates the policy via Graph POST.
+
+    Authentication options:
+        - App-only (Client Credentials): supply -ClientID, -ClientSecret, -TenantId
+        - Delegated (interactive AzureAD): supply -DelegateClientID
+
+.PRODUCT
+    Microsoft Entra ID / Conditional Access / Microsoft Graph
+
+.ORIGINAL_AUTHOR
+    euc365.com
+    Reference: https://euc365.com/post/backup-and-import-conditional-access-policies/
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (INT-005 classification & English header)
+
+.VERSION
+    1.1
+
+.PARAMETER ClientID
+    App Registration Client ID for client credentials (app-only) auth.
+
+.PARAMETER ClientSecret
+    App Registration Client Secret.
+
+.PARAMETER TenantId
+    Azure Tenant ID (GUID).
+
+.PARAMETER DelegateClientID
+    App Registration Client ID for delegated (interactive) auth.
+
+.PARAMETER OutputFolder
+    Path to store exported JSON files. Default: ".ConditionalAccessPolicyBackup" (timestamped).
+
+.PARAMETER Import
+    Switch. When present, runs in import mode.
+
+.PARAMETER ImportJSON
+    Path to the JSON file to import. Required when -Import is used.
+
+.EXAMPLE
+    # Backup all CA policies (app-only auth)
+    .\INT-005_BackupImport-CAPolicies.ps1 -ClientID "xxx" -ClientSecret "yyy" -TenantId "zzz"
+
+.EXAMPLE
+    # Import a single CA policy
+    .\INT-005_BackupImport-CAPolicies.ps1 -DelegateClientID "xxx" -Import -ImportJSON "C:\temp\policy.json"
+
+.NOTES
+    - Reference: https://euc365.com/post/backup-and-import-conditional-access-policies/
+    - Token helper reference: https://morgantechspace.com/2019/08/get-graph-api-access-token-using-client-id-and-client-secret.html
+#>
+
 #https://euc365.com/post/backup-and-import-conditional-access-policies/
 param(
     [Parameter(DontShow = $true)]

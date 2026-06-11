@@ -1,3 +1,44 @@
+<#
+.SYNOPSIS
+    M365-006 | M365 Assessment - SharePoint Online Site Usage Report via Microsoft Graph (App Auth).
+
+.DESCRIPTION
+    Uses an Entra ID App Registration (client credentials flow) to call the Microsoft Graph
+    Reporting API and retrieve SharePoint Online site usage statistics for the last 30 days.
+
+    Output: C:\Temp\siteusage.csv
+
+    Graph endpoint used:
+        GET /v1.0/reports/getSharePointSiteUsageDetail(period='D30')
+
+    Columns in the report include: site URL, owner, storage used, file count, activity dates.
+
+    NOTE: Update $ClientID and $TenantName with your own tenant values.
+    $ClientSecret is prompted interactively for security.
+
+.PRODUCT
+    SharePoint Online / Microsoft Graph Reporting API
+
+.ORIGINAL_AUTHOR
+    SharePointDiary.com
+    Reference: https://www.sharepointdiary.com/2019/11/sharepoint-online-usage-reports-using-graph-api-powershell.html
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (M365-006 classification & English header)
+
+.VERSION
+    1.1
+
+.NOTES
+    - No PowerShell module required (uses Invoke-RestMethod directly)
+    - App Registration must have Reports.Read.All permission (or Sites.Read.All)
+    - Output: C:\Temp\siteusage.csv
+
+.EXAMPLE
+    .\M365-006_SPO-UsageReport-Graph.ps1
+    (You will be prompted for the Client Secret)
+#>
+
 #https://www.sharepointdiary.com/2019/11/sharepoint-online-usage-reports-using-graph-api-powershell.html
 
 # Function to Call Graph API

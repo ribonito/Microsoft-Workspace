@@ -1,4 +1,47 @@
-﻿# Remediation script for rename hybrid joined device operation
+<#
+.SYNOPSIS
+    INT-014 | Intune Proactive Remediation - REMEDIATE: Rename Hybrid AD Joined Device per Autopilot Record.
+
+.DESCRIPTION
+    Remediation script for an Intune Proactive Remediation package.
+    Renames the device to the name stored in its Windows Autopilot record (via Microsoft Graph).
+
+    Flow:
+        1. Connects to Microsoft Graph using Client Credentials (app-only)
+        2. Retrieves the device serial number from WMI
+        3. Queries the Autopilot record for the expected device name
+        4. If device name matches → marks completion in registry and exits 0
+        5. If device is AD domain-joined and DC reachable → renames and schedules restart
+        6. Writes completion tag: HKLM\Software\Sunrise\Manage\HAADJComputerRename = 1
+
+    Exit codes:
+        0   = Rename not needed OR completed successfully
+        1   = Cannot rename (no connectivity, AP record empty, domain issue)
+        1641 = Hard reboot required (during OOBE/ESP)
+        3010 = Soft reboot scheduled (60 min)
+
+    Deploy paired with INT-013 (HybridCompuerRename-detect.ps1).
+
+.PRODUCT
+    Microsoft Intune / Windows Autopilot / Hybrid AD Join / Proactive Remediation
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.NOTES
+    - Module: Microsoft.Graph.Authentication, Microsoft.Graph.Intune (auto-installed)
+    - Requires App Registration with DeviceManagementManagedDevices.Read.All
+    - Logs to: %ProgramData%\Microsoft\IntuneManagementExtension\Logs\
+    - Update $ClientId, $TenantId, and $ClientSecret before deployment
+
+.EXAMPLE
+    Run automatically by Intune Proactive Remediation (not called manually)
+#>
+
+# Remediation script for rename hybrid joined device operation
 # device name stored in the computer autopilot record is used to set the name of the device
 
 # Configuration

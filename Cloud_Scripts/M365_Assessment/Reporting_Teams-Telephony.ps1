@@ -1,3 +1,38 @@
+<#
+.SYNOPSIS
+    TEA-003 | Microsoft Teams - Export Telephony Numbers by Type (OC, Calling Plan, Direct Routing).
+
+.DESCRIPTION
+    Connects to Microsoft Teams and exports phone number assignments by telephony type
+    into three separate CSV files:
+        - OperatorConnectNumbers.csv     → Operator Connect (OC) numbers
+        - CallingPlanTelephoneNumbers.csv → Microsoft Calling Plan numbers
+        - DirectRoutingNumbers.csv       → Direct Routing (DR) numbers
+
+    A folder selection dialog is shown to choose the output directory.
+    User is prompted to confirm before overwriting existing files.
+
+    Columns exported: DisplayName, LineUri, OnlineDialOutPolicy, UsageLocation.
+
+.PRODUCT
+    Microsoft Teams Phone / Teams Telephony
+
+.AUTHOR
+    Josep Canas - M365 Solutions Architect
+
+.VERSION
+    1.1
+
+.NOTES
+    - Module: MicrosoftTeams
+    - Requires Teams Administrator or Global Reader role
+    - Run on Windows PowerShell (WinForms GUI dialog used for folder selection)
+
+.EXAMPLE
+    .\TEA-003_Export-TelephonyNumbers.ps1
+    (A folder browser dialog will appear to select the output directory)
+#>
+
 Try {
     $includeFields = "DisplayName","LineUri","OnlineDialOutPolicy","UsageLocation"
     $OCFile = "OperatorConnectNumbers.csv"

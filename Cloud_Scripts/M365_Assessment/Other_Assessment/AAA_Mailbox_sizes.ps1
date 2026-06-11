@@ -1,32 +1,62 @@
 <#
 .SYNOPSIS
-  Create report of all mailbox and archive sizes
+    M365-005 | M365 Assessment - Mailbox and Archive Size Report (Full, with Shared Mailboxes).
+
 .DESCRIPTION
-  Collects all the mailbox and archive stats from Exchange Online users. By default it will also
-  include the Shared Mailboxes. 
+    Generates a comprehensive CSV report of all mailbox sizes in Exchange Online,
+    including primary mailbox and archive statistics. Supports filtering by mailbox type
+    (user, shared, or both) and optional archive inclusion.
+
+    Output columns per mailbox:
+        - Display Name / Email Address / Mailbox Type
+        - Last User Action Time
+        - Total Size (GB) / Deleted Items Size (GB) / Item Count
+        - Mailbox Warning Quota / Max Mailbox Size (GB)
+        - Archive Size (GB) / Archive Item Count / Archive Quota (GB)
+
+    Useful for Exchange Online license planning (E1/E3/E5),
+    mailbox migration sizing, and governance audits.
+
+.PRODUCT
+    Exchange Online
+
+.ORIGINAL_AUTHOR
+    R. Mens - LazyAdmin.nl
+    Version: 1.1 | Creation: 23 Sep 2021
+    Purpose/Change: Added Item Count and User last action time
+    Reference: https://lazyadmin.nl/powershell/office-365-mailbox-size-report
+
+.MAINTAINER
+    Josep Canas - M365 Solutions Architect (M365-005 classification & English header)
+
+.VERSION
+    1.2
+
+.PARAMETER adminUPN
+    UPN of the Exchange Online or Global Administrator account.
+
+.PARAMETER sharedMailboxes
+    "include" (default) = include shared mailboxes | "only" = only shared | "no" = only user mailboxes.
+
+.PARAMETER archive
+    Switch. Include archive mailbox statistics. Default: enabled.
+
+.PARAMETER path
+    Output CSV file path. Defaults to script root + date-stamped filename.
+
 .EXAMPLE
-  Get-MailboxSizeReport.ps1 -adminUPN johndoe@contoso.com
-  Generate the mailbox size report with Shared mailboxes, mailbox archive and store 
-  the csv file in the script root location.
+    .\M365-005_Mailbox-ArchiveSize-Full.ps1 -adminUPN admin@contoso.com
+
 .EXAMPLE
-  Get-MailboxSizeReport.ps1 -adminUPN johndoe@contoso.com -sharedMailboxes only
-  Get only the shared mailboxes
+    .\M365-005_Mailbox-ArchiveSize-Full.ps1 -adminUPN admin@contoso.com -sharedMailboxes only
+
 .EXAMPLE
-  Get-MailboxSizeReport.ps1 -adminUPN johndoe@contoso.com -sharedMailboxes no
-  Get only the user mailboxes
-.EXAMPLE
-  Get-MailboxSizeReport.ps1 -adminUPN johndoe@contoso.com -archive:$false
-  Get the mailbox size without the archive mailboxes
-.EXAMPLE
-  Get-MailboxSizeReport.ps1 -adminUPN johndoe@contoso.com -path c:\temp\report.csv
-  Store CSV report in c:\temp\report.csv
+    .\M365-005_Mailbox-ArchiveSize-Full.ps1 -adminUPN admin@contoso.com -sharedMailboxes no -archive:$false
+
 .NOTES
-  Version:        1.1
-  Author:         R. Mens - LazyAdmin.nl
-  Creation Date:  23 sep 2021
-  Purpose/Change: Added Item Count and User last action time
-  Link:           https://lazyadmin.nl/powershell/office-365-mailbox-size-report
+    Module: ExchangeOnlineManagement
 #>
+
 
 param(
   [Parameter(
