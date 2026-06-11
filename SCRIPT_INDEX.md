@@ -33,6 +33,7 @@
 | EXO-004 | EXO-004_Disable-SelfServicePurchase.ps1 | Disable self-service purchases for all M365 products (MSCommerce) |
 | EXO-005 | EXO-005_Security-Hardening-NewTenant.ps1 | Consolidated Exchange Online security hardening for new tenant onboarding |
 | EXO-006 | EXO-006_PartnerCenter-CustomerQuery.ps1 | Query CSP partner/customer data via PartnerCenter module |
+| EXO-007 | EXO-007_Exchange-Mailbox-Conversion.ps1 | Convert user mailboxes between User (Regular), Room, Equipment, and Shared types |
 
 ---
 
