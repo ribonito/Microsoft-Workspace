@@ -50,6 +50,8 @@
 | SPO-006 | SPO-006_Permissions-Management.ps1 | Audit/break/restore inheritance, remove external users, replace security groups |
 | SPO-007 | SPO-007_SiteDesigns-Management.ps1 | Create, apply, export and cleanup Site Designs and Site Scripts |
 | SPO-008 | SPO-008_Sharepoint-Bulk-Creation.ps1 | Bulk create Microsoft Teams from a CSV template |
+| SPO-009 | SPO-009_Migration-CheckFiles-Scan.ps1 | Scan and log local files recursively to CSV before SharePoint Online migration |
+| SPO-010 | SPO-010_Migration-CheckFiles-Analyze.ps1 | Analyze logged files recursively against SharePoint Online size/path/extension limits |
 
 ---
 
@@ -61,6 +63,8 @@
 | TEA-002 | TEA-002_Teams-UniqueMembers-Export.ps1 | Export de-duplicated list of unique users across all Teams |
 | TEA-003 | TEA-003_Export-Teams-List-PnP.ps1 | Export list of Teams, channels, visibility, and owners using PnP |
 | TEA-004 | TEA-004_Teams-Interactive-Assessment.ps1 | Interactive menu to audit and export Teams and channels to CSV |
+| TEA-005 | TEA-005_Set-Teams-Retention-Policy.ps1 | Assign specific information retention policies to a Microsoft Team |
+| TEA-006 | TEA-006_Get-Skype-Conferencing-Policies.ps1 | Retrieve Skype for Business / Teams conferencing policies and export to CSV |
 
 ---
 
@@ -82,6 +86,10 @@
 | M365-012 | M365-012_M365-Licensing-SKU-Export.ps1 | Export subscribed licensing SKUs and friendly service plan names |
 | M365-013 | M365-013_Mailbox-ArchiveSize-FullReport.ps1 | Detailed Exchange Online mailbox size and archive status report |
 | M365-014 | M365-014_SPO-SiteUsage-GraphReport.ps1 | Call Graph Reporting API to get 30-day SPO site storage/activity |
+| M365-015 | M365-015_Delete-Group-Azure-Function.ps1 | Retrieve and delete Microsoft 365 Groups via Graph API in an Azure Function |
+| M365-016 | M365-016_Provision-Group-Azure-Function.ps1 | Check and provision Microsoft 365 Groups with owner/member via Graph API |
+| M365-017 | M365-017_Export-Unified-Groups-Report.ps1 | Export inventory of M365 groups with associated SharePoint Online site usage |
+| M365-018 | M365-018_Export-User-Licenses-MSOnline.ps1 | Export inventory mapping users to their M365 licenses and active plans |
 
 ---
 
@@ -121,6 +129,8 @@
 | UTL-004 | UTL-004_Update-M365PSModules.ps1 | Update and maintain all M365 PowerShell modules, clean old versions |
 | UTL-005 | UTL-005_Install-PSModules.ps1 | Bootstrapping utility to install all required M365 PowerShell modules |
 | UTL-006 | UTL-006_Combine-CsvFiles.ps1 | Merge multiple Autopilot device export CSVs into a single import file |
+| UTL-007 | UTL-007_Get-Daily-Bing-Picture.ps1 | Download daily Bing wallpaper and save to Teams background folder |
+| UTL-008 | UTL-008_Connect-Exchange-SPO-Legacy.ps1 | Establish legacy basic auth connections to Exchange Online and SharePoint |
 
 ---
 
@@ -146,9 +156,9 @@
 
 ```
 ─── Assessment Phase ────────────────────────────────────────
-  M365-001 → M365-002 → M365-003 → M365-004 → M365-009 → M365-010 → M365-011 → M365-012 → M365-013 → M365-014
-  TEA-001  → TEA-002  → TEA-003  → TEA-004
-  SPO-001  → SPO-006 (Audit mode)
+  M365-001 → M365-002 → M365-003 → M365-004 → M365-009 → M365-010 → M365-011 → M365-012 → M365-013 → M365-014 → M365-017 → M365-018
+  TEA-001  → TEA-002  → TEA-003  → TEA-004  → TEA-006
+  SPO-001  → SPO-009  → SPO-010  → SPO-006 (Audit mode)
   OPR-001  → OPR-002  → OPR-003
 
 ─── Hardening / Onboarding Phase ────────────────────────────
