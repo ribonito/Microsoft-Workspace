@@ -29,7 +29,27 @@ The repository is organized into distinct, specialized directories to ensure hig
 
 ---
 
+## 🗂️ Script Catalog & Standards
 
+All scripts in the workspace (including those in `Cloud_Scripts/`, `OnPremises_Scripts/`, and the nested `O365scripts/` repository) are standardized under a unified coding structure.
+
+For the complete, searchable script catalog and the recommended execution roadmap, refer to the **[SCRIPT_INDEX.md](SCRIPT_INDEX.md)**.
+
+### Prefix Naming Conventions
+Scripts are named with a standardized prefix and a unique three-digit ID:
+- `EXO-NNN` – Exchange Online / Security Hardening / ATP
+- `SPO-NNN` – SharePoint Online & Migration Assessments
+- `TEA-NNN` – Microsoft Teams
+- `M365-NNN` – Cross-Service M365 Assessments & Microsoft Graph Reports
+- `INT-NNN` – Intune Configurations, Autopilot & Endpoint Manager
+- `UTL-NNN` – Module Connectors, Caches, and General Utilities
+- `OPR-NNN` – On-Premises & Infrastructure Assessments (Citrix / Exchange)
+- `MIG-NNN` – Migration Wiz / Statistics helpers
+
+### Script Design & Formatting Rules
+1. **English Help Headers**: Standardized using standard PowerShell comment help parameters (`.SYNOPSIS`, `.DESCRIPTION`, `.NOTES`, `.PARAMETER`, `.EXAMPLE`).
+2. **79-Character Region Wrappers**: Visual code blocks are delimited by 79-character box-drawn `#region` tags (e.g. `#region ── Parameters ──` and `#region ── Main Program ──`) to maximize IDE navigation efficiency.
+3. **Automated AST Validation**: Every script is compiled against the system AST Parser (`[System.Management.Automation.Language.Parser]::ParseFile`) to ensure there are zero syntax or token errors.
 
 ---
 
