@@ -131,6 +131,22 @@
 | UTL-006 | UTL-006_Combine-CsvFiles.ps1 | Merge multiple Autopilot device export CSVs into a single import file |
 | UTL-007 | UTL-007_Get-Daily-Bing-Picture.ps1 | Download daily Bing wallpaper and save to Teams background folder |
 | UTL-008 | UTL-008_Connect-Exchange-SPO-Legacy.ps1 | Establish legacy basic auth connections to Exchange Online and SharePoint |
+| UTL-009 | UTL-009_Connect-All.ps1 | Installs and connects to all common M365 PowerShell modules |
+| UTL-010 | UTL-010_Connect-AzureAD.ps1 | Connect to Azure Active Directory v2 / Entra ID with or without MFA |
+| UTL-011 | UTL-011_Connect-Commerce.ps1 | Connect to M365 Commerce module to manage subscriptions and purchases |
+| UTL-012 | UTL-012_Connect-Exchange-Online.ps1 | Establish modern authentication connections to Exchange Online |
+| UTL-013 | UTL-013_Connect-Exchange-Online-Basic-Deprecated.ps1 | Connect to Exchange Online using legacy Basic Authentication (Deprecated) |
+| UTL-014 | UTL-014_Connect-MSOnline.ps1 | Connect to legacy MSOnline Service module with or without MFA |
+| UTL-015 | UTL-015_Connect-Teams.ps1 | Connect to Microsoft Teams PowerShell module (including GCC/DoD) |
+| UTL-016 | UTL-016_Connect-Security-Compliance.ps1 | Connect to the M365 Security & Compliance Center via modern IPPSSession |
+| UTL-017 | UTL-017_Connect-SharePoint-Online.ps1 | Connect to the SharePoint Online Admin Center service |
+| UTL-018 | UTL-018_Connect-Skype-Online-Deprecated.ps1 | Connect to Skype for Business Online via legacy connector (Deprecated) |
+| UTL-019 | UTL-019_Connect-SharePoint-PnP.ps1 | Connect to SharePoint Online using modern PnP PowerShell |
+| UTL-020 | UTL-020_Get-RandomAlphaNumString.ps1 | Helper function: generate a random alphanumeric string of custom length |
+| UTL-021 | UTL-021_Get-Timestamp.ps1 | Helper function: generate standard timestamp string for export files |
+| UTL-022 | UTL-022_New-Script-Template.ps1 | Template script: report builder collection structure and CSV output |
+| UTL-023 | UTL-023_New-Function-Template.ps1 | Template function: standard CmdletBinding and positional parameter block |
+| UTL-024 | UTL-024_Office-Apps-Management.ps1 | Manage local Office Click-to-Run activations and build version updates |
 
 ---
 
@@ -175,5 +191,5 @@
   INT-001 → INT-002 → INT-003 → INT-004 → INT-005 → INT-006 → INT-007 → INT-008 → INT-009 → INT-010 → INT-011 → INT-012 → INT-013 → INT-014 → INT-015 → INT-016 → INT-017 → INT-018 → INT-019
 
 ─── Utilities (use as needed) ────────────────────────────────
-  UTL-001 → UTL-003 → UTL-002 → UTL-004 → UTL-005 → UTL-006
+  UTL-001 → UTL-003 → UTL-002 → UTL-004 → UTL-005 → UTL-006 → UTL-009 → UTL-010 → UTL-011 → UTL-012 → UTL-014 → UTL-015 → UTL-016 → UTL-017 → UTL-019 → UTL-024
 ```
