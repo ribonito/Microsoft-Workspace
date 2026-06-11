@@ -91,6 +91,7 @@
 | M365-016 | M365-016_Provision-Group-Azure-Function.ps1 | Check and provision Microsoft 365 Groups with owner/member via Graph API |
 | M365-017 | M365-017_Export-Unified-Groups-Report.ps1 | Export inventory of M365 groups with associated SharePoint Online site usage |
 | M365-018 | M365-018_Export-User-Licenses-MSOnline.ps1 | Export inventory mapping users to their M365 licenses and active plans |
+| M365-019 | M365-019_MS-Graph-Licensing-Overview.ps1 | Export inventory mapping all subscribed licensing SKUs and service plans via Microsoft Graph |
 
 ---
 
@@ -173,7 +174,7 @@
 
 ```
 ─── Assessment Phase ────────────────────────────────────────
-  M365-001 → M365-002 → M365-003 → M365-004 → M365-009 → M365-010 → M365-011 → M365-012 → M365-013 → M365-014 → M365-017 → M365-018
+  M365-001 → M365-002 → M365-003 → M365-004 → M365-009 → M365-010 → M365-011 → M365-012 → M365-013 → M365-014 → M365-017 → M365-018 → M365-019
   TEA-001  → TEA-002  → TEA-003  → TEA-004  → TEA-006
   SPO-001  → SPO-009  → SPO-010  → SPO-006 (Audit mode)
   OPR-001  → OPR-002  → OPR-003
