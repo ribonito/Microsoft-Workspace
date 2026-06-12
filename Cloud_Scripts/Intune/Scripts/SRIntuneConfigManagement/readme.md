@@ -149,7 +149,7 @@ Use the following command to create a full backup of Intune configuration
 
 Data is saved in a subfolder of the specified folder that points to the backed up Intune tenant and backup date and time
 Example:
-`C:\temp\IntuneBackup\Sunlab_0b57e92f-4bfc-4513-81af-dff5bed4c391_202405081504`
+`C:\temp\IntuneBackup\TestTenant_0b57e92f-4bfc-4513-81af-dff5bed4c391_202405081504`
 
 ##Dependent object information
 When backup is created DisplayName and id pairs are preserved in addition to json files in form of CSV files. This facilitates restore of object references when restoring in another tenant where reference objects have different ids. DisplayNames are used as keys. This concerns the following object types:
