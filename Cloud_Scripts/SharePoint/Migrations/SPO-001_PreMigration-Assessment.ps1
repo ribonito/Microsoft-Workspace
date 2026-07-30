@@ -144,16 +144,15 @@ foreach ($site in $allSites) {
         }
 
         # ── 3b. Unique site permissions ───────────────────────────────────
-        $web = Get-PnPWeb -Includes HasUniqueRoleAssignments, RoleAssignments
+        $web = Get-PnPWeb -Includes HasUniqueRoleAssignments, RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings
         if ($web.HasUniqueRoleAssignments) {
-            $roleAssignments = Get-PnPWebPermission
-            foreach ($ra in $roleAssignments) {
+            foreach ($ra in $web.RoleAssignments) {
                 $permissionReport.Add([PSCustomObject]@{
                     SiteUrl     = $site.Url
-                    Principal   = $ra.PrincipalName
-                    PrincipalType = $ra.PrincipalType
-                    Roles       = ($ra.Roles -join '; ')
-                    IsInherited = $ra.IsInherited
+                    Principal   = $ra.Member.LoginName
+                    PrincipalType = $ra.Member.PrincipalType
+                    Roles       = ($ra.RoleDefinitionBindings | Select-Object -ExpandProperty Name) -join '; '
+                    IsInherited = $false
                 })
             }
         }

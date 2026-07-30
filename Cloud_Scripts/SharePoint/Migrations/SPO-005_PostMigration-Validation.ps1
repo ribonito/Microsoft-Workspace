@@ -189,10 +189,22 @@ foreach ($ct in $srcCTs) {
 Write-Log "=== PHASE 4: Validating site permissions ===" -Level PHASE
 
 Connect-ToSite -Url $SourceUrl
-$srcPerms = Get-PnPWebPermission
+$srcWebPermissions = Get-PnPWeb -Includes RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings
+$srcPerms = foreach ($assignment in $srcWebPermissions.RoleAssignments) {
+    [PSCustomObject]@{
+        PrincipalName = $assignment.Member.LoginName
+        Roles         = $assignment.RoleDefinitionBindings | Select-Object -ExpandProperty Name
+    }
+}
 
 Connect-ToSite -Url $DestUrl
-$dstPerms = Get-PnPWebPermission
+$dstWebPermissions = Get-PnPWeb -Includes RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings
+$dstPerms = foreach ($assignment in $dstWebPermissions.RoleAssignments) {
+    [PSCustomObject]@{
+        PrincipalName = $assignment.Member.LoginName
+        Roles         = $assignment.RoleDefinitionBindings | Select-Object -ExpandProperty Name
+    }
+}
 
 foreach ($perm in $srcPerms) {
     $matched = $dstPerms | Where-Object { $_.PrincipalName -eq $perm.PrincipalName }
@@ -268,13 +280,11 @@ if ($AutoRemediate) {
     Write-Log "=== PHASE 7: Running auto-remediations ===" -Level PHASE
     Connect-ToSite -Url $DestUrl
 
-    # Enforce NoScript status on destination
-    Set-PnPSite -NoScriptSite $true -ErrorAction SilentlyContinue
-    Write-Log "NoScript capability enabled on destination." -Level SUCCESS
-
     # Reactivate modern page feature
-    Enable-PnPFeature -Identity "B6917CB1-93A0-4B97-A84D-7CF49975D4EC" -Scope Web -Force -ErrorAction SilentlyContinue
-    Write-Log "Modern Site Pages feature re-enabled." -Level SUCCESS
+    if ($PSCmdlet.ShouldProcess($DestUrl, "Reactivate the Modern Site Pages feature")) {
+        Enable-PnPFeature -Identity "B6917CB1-93A0-4B97-A84D-7CF49975D4EC" -Scope Web -Force -ErrorAction Stop
+        Write-Log "Modern Site Pages feature re-enabled." -Level SUCCESS
+    }
 }
 #endregion
 

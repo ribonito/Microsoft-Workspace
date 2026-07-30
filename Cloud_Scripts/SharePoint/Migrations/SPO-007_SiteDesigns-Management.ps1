@@ -110,6 +110,11 @@ Connect-PnPOnline -Url $TenantAdminUrl -ClientId $ClientId -Thumbprint $Thumbpri
 if ($Mode -eq "Create") {
     Write-Log "=== CREATING SITE SCRIPT + SITE DESIGN ===" -Level PHASE
 
+    if (-not $SiteDesignName) {
+        Write-Log "-SiteDesignName parameter is required for Create mode." -Level ERROR
+        exit 1
+    }
+
     if (-not $SiteScriptJsonPath -or -not (Test-Path $SiteScriptJsonPath)) {
         Write-Log "No SiteScriptJsonPath specified. Using default template." -Level WARN
 
@@ -130,7 +135,7 @@ if ($Mode -eq "Create") {
                 }
                 @{
                     verb     = "addNavLink"
-                    url      = "/sites/migration-tracker"
+                    url      = "/Lists/Migration%20Tracker"
                     displayName = "Migration Tracker"
                     isWebRelative = $false
                 }
@@ -200,8 +205,8 @@ if ($Mode -eq "ApplyToSites") {
         Write-Log "Applying to: $siteUrl"
         try {
             if ($PSCmdlet.ShouldProcess($siteUrl, "Apply Site Design '$SiteDesignName'")) {
-                Connect-PnPOnline -Url $siteUrl -ClientId $ClientId -Thumbprint $Thumbprint -Tenant $TenantId
-                $result = Invoke-PnPSiteDesign -Identity $design.Id
+                # Invoke from the tenant-admin connection, explicitly targeting the site.
+                $result = Invoke-PnPSiteDesign -Identity $design.Id -WebUrl $siteUrl
                 Write-Log "  ✔ Applied successfully." -Level SUCCESS
                 $applyResults.Add([PSCustomObject]@{
                     SiteUrl    = $siteUrl
@@ -209,7 +214,6 @@ if ($Mode -eq "ApplyToSites") {
                     Status     = "SUCCESS"
                     AppliedAt  = Get-Date -Format 'yyyy-MM-dd HH:mm'
                 })
-                Connect-PnPOnline -Url $TenantAdminUrl -ClientId $ClientId -Thumbprint $Thumbprint -Tenant $TenantId
             }
         } catch {
             Write-Log "  ✖ Error applying to $($siteUrl): $_" -Level ERROR

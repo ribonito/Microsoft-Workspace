@@ -119,30 +119,29 @@ if ($Mode -eq "Audit") {
     $permMatrix = [System.Collections.Generic.List[PSObject]]::new()
 
     # Site Level Permissions
-    $sitePerms = Get-PnPWebPermission
-    foreach ($p in $sitePerms) {
+    $web = Get-PnPWeb -Includes RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings
+    foreach ($p in $web.RoleAssignments) {
         $permMatrix.Add([PSCustomObject]@{
             Level       = "Site"
             Object      = $SiteUrl
-            Principal   = $p.PrincipalName
-            Type        = $p.PrincipalType
-            Roles       = ($p.Roles -join '; ')
-            Inherited   = $p.IsInherited
+            Principal   = $p.Member.LoginName
+            Type        = $p.Member.PrincipalType
+            Roles       = ($p.RoleDefinitionBindings | Select-Object -ExpandProperty Name) -join '; '
+            Inherited   = $false
         })
     }
 
     # List/Library Level Permissions
     foreach ($list in $lists) {
-        $listObj = Get-PnPList -Identity $list.Title -Includes HasUniqueRoleAssignments
+        $listObj = Get-PnPList -Identity $list.Title -Includes HasUniqueRoleAssignments, RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings
         if ($listObj.HasUniqueRoleAssignments) {
-            $listPerms = Get-PnPListPermissions -Identity $list.Title -ErrorAction SilentlyContinue
-            foreach ($lp in $listPerms) {
+            foreach ($lp in $listObj.RoleAssignments) {
                 $permMatrix.Add([PSCustomObject]@{
                     Level     = "List/Library"
                     Object    = $list.Title
-                    Principal = $lp.PrincipalName
-                    Type      = $lp.PrincipalType
-                    Roles     = ($lp.Roles -join '; ')
+                    Principal = $lp.Member.LoginName
+                    Type      = $lp.Member.PrincipalType
+                    Roles     = ($lp.RoleDefinitionBindings | Select-Object -ExpandProperty Name) -join '; '
                     Inherited  = $false
                 })
             }
@@ -152,16 +151,15 @@ if ($Mode -eq "Audit") {
         if ($list.ItemCount -le 1000 -and $list.BaseTemplate -eq 100) {
             $items = Get-PnPListItem -List $list.Title -PageSize 500
             foreach ($item in $items) {
-                $itemObj = Get-PnPListItem -List $list.Title -Id $item.Id -Includes "HasUniqueRoleAssignments"
+                $itemObj = Get-PnPListItem -List $list.Title -Id $item.Id -Includes "HasUniqueRoleAssignments", "RoleAssignments", "RoleAssignments.Member", "RoleAssignments.RoleDefinitionBindings"
                 if ($itemObj.HasUniqueRoleAssignments) {
-                    $itemPerms = Get-PnPListItemPermission -List $list.Title -Identity $item.Id -ErrorAction SilentlyContinue
-                    foreach ($ip in $itemPerms) {
+                    foreach ($ip in $itemObj.RoleAssignments) {
                         $permMatrix.Add([PSCustomObject]@{
                             Level     = "Item"
                             Object    = "$($list.Title) / ID:$($item.Id)"
-                            Principal = $ip.PrincipalName
-                            Type      = $ip.PrincipalType
-                            Roles     = ($ip.Roles -join '; ')
+                            Principal = $ip.Member.LoginName
+                            Type      = $ip.Member.PrincipalType
+                            Roles     = ($ip.RoleDefinitionBindings | Select-Object -ExpandProperty Name) -join '; '
                             Inherited  = $false
                         })
                     }
@@ -265,11 +263,13 @@ if ($Mode -eq "ReplaceGroup") {
     }
 
     # Get current roles of the source group on the site
-    $web = Get-PnPWeb -Includes RoleAssignments
+    $web = Get-PnPWeb -Includes RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings
+    $oldGroupRoles = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($ra in $web.RoleAssignments) {
         if ($ra.Member.LoginName -like "*$OldGroupName*") {
             $roleDefinitions = $ra.RoleDefinitionBindings | Select-Object -ExpandProperty Name
             foreach ($role in $roleDefinitions) {
+                [void]$oldGroupRoles.Add($role)
                 if ($PSCmdlet.ShouldProcess($SiteUrl, "Assign role '$role' to '$NewGroupName'")) {
                     Set-PnPWebPermission -Group $NewGroupName -AddRole $role | Out-Null
                     Write-Log "  Assigned role '$role' to '$NewGroupName'" -Level SUCCESS
@@ -278,11 +278,11 @@ if ($Mode -eq "ReplaceGroup") {
         }
     }
 
-    # Remove the old group from the site
+    # Remove every role copied from the old group, including custom role definitions.
     if ($PSCmdlet.ShouldProcess($SiteUrl, "Remove group '$OldGroupName' from site")) {
-        Set-PnPWebPermission -Group $OldGroupName -RemoveRole "Full Control" -ErrorAction SilentlyContinue
-        Set-PnPWebPermission -Group $OldGroupName -RemoveRole "Edit"         -ErrorAction SilentlyContinue
-        Set-PnPWebPermission -Group $OldGroupName -RemoveRole "Read"         -ErrorAction SilentlyContinue
+        foreach ($role in $oldGroupRoles) {
+            Set-PnPWebPermission -Group $OldGroupName -RemoveRole $role -ErrorAction Stop
+        }
         Write-Log "  Removed group '$OldGroupName' permissions from site." -Level SUCCESS
     }
 }

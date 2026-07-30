@@ -135,12 +135,14 @@ if (-not $existingHub) {
 
 # Apply sharing policy configuration to the Hub site
 Connect-Admin
-Set-PnPTenantSite -Url $hubUrl `
-    -SharingCapability $SharingPolicy `
-    -DefaultLinkPermission View `
-    -DefaultSharingLinkType Internal `
-    -DisableSharingForNonOwnersStatus:$false | Out-Null
-Write-Log "Sharing policy applied: $SharingPolicy" -Level SUCCESS
+if ($PSCmdlet.ShouldProcess($hubUrl, "Apply sharing policy '$SharingPolicy'")) {
+    Set-PnPTenantSite -Url $hubUrl `
+        -SharingCapability $SharingPolicy `
+        -DefaultLinkPermission View `
+        -DefaultSharingLinkType Internal `
+        -ErrorAction Stop | Out-Null
+    Write-Log "Sharing policy applied: $SharingPolicy" -Level SUCCESS
+}
 
 # Register as Hub Site
 try {
@@ -204,7 +206,7 @@ foreach ($spoke in $SpokesDefinition) {
     }
 
     # Associate spoke to Hub
-    Connect-Site -Url $spokeUrl
+    Connect-Admin
     try {
         Add-PnPHubSiteAssociation -Site $spokeUrl -HubSite $hubUrl -ErrorAction Stop
         Write-Log "  Associated spoke '$($spoke.Title)' to Hub." -Level SUCCESS
@@ -214,10 +216,13 @@ foreach ($spoke in $SpokesDefinition) {
 
     # Configure sharing policy of the spoke
     Connect-Admin
-    Set-PnPTenantSite -Url $spokeUrl `
-        -SharingCapability $SharingPolicy `
-        -DefaultLinkPermission View `
-        -DefaultSharingLinkType Internal | Out-Null
+    if ($PSCmdlet.ShouldProcess($spokeUrl, "Apply sharing policy '$SharingPolicy'")) {
+        Set-PnPTenantSite -Url $spokeUrl `
+            -SharingCapability $SharingPolicy `
+            -DefaultLinkPermission View `
+            -DefaultSharingLinkType Internal `
+            -ErrorAction Stop | Out-Null
+    }
 }
 #endregion
 

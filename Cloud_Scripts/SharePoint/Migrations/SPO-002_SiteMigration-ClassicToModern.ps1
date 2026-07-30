@@ -162,7 +162,7 @@ if ($MigrateContent) {
     Write-Log "=== PHASE 4: Migrating files and library content ==="
     Connect-SPOSite -Url $SourceUrl
 
-    $sourceLibraries = Get-PnPList | Where-Object {
+    $sourceLibraries = Get-PnPList -Includes RootFolder | Where-Object {
         $_.BaseTemplate -eq 101 -and -not $_.Hidden
     }
 
@@ -175,8 +175,13 @@ if ($MigrateContent) {
                 $fileUrl = $item["FileRef"]
                 if (-not $fileUrl) { continue }
 
-                $fileName  = Split-Path $fileUrl -Leaf
-                $localTemp = "$env:TEMP\PnPMigration\$($library.Title)"
+                $fileName = Split-Path $fileUrl -Leaf
+                $relativeFilePath = $fileUrl.Substring($library.RootFolder.ServerRelativeUrl.Length).TrimStart('/')
+                $relativeFolder = Split-Path $relativeFilePath -Parent
+                $localTemp = Join-Path -Path $env:TEMP -ChildPath "PnPMigration\$($library.Id)"
+                if ($relativeFolder -and $relativeFolder -ne '.') {
+                    $localTemp = Join-Path -Path $localTemp -ChildPath $relativeFolder
+                }
                 if (-not (Test-Path $localTemp)) {
                     New-Item -ItemType Directory -Path $localTemp -Force | Out-Null
                 }
@@ -186,12 +191,18 @@ if ($MigrateContent) {
 
                 # Upload file to destination
                 Connect-SPOSite -Url $DestinationUrl
-                Add-PnPFile -Path "$localTemp\$fileName" -Folder $library.Title -ErrorAction Stop
+                $destinationLibrary = Get-PnPList -Identity $library.Title -Includes RootFolder -ErrorAction Stop
+                $destinationFolder = $destinationLibrary.RootFolder.ServerRelativeUrl
+                if ($relativeFolder -and $relativeFolder -ne '.') {
+                    $destinationFolder = "$destinationFolder/$relativeFolder"
+                }
+                Add-PnPFile -Path (Join-Path $localTemp $fileName) -Folder $destinationFolder -ErrorAction Stop
 
                 # Restore metadata properties
-                $destItem = Get-PnPListItem -List $library.Title -Query "<View><Query><Where><Eq><FieldRef Name='FileLeafRef'/><Value Type='Text'>$fileName</Value></Eq></Where></Query></View>"
+                $destinationFileUrl = "$destinationFolder/$fileName"
+                $destItem = Get-PnPFile -Url $destinationFileUrl -AsListItem -ErrorAction Stop
                 if ($destItem) {
-                    $metaFields = @("Author","Created","Modified","Title")
+                    $metaFields = @("Title")
                     $updates = @{}
                     foreach ($f in $metaFields) {
                         if ($item[$f]) { $updates[$f] = $item[$f] }
@@ -217,6 +228,7 @@ Write-Log "=== PHASE 5: Replicating security groups and permissions ==="
 Connect-SPOSite -Url $SourceUrl
 
 $sourceGroups = Get-PnPGroup
+$sourceRoleAssignments = (Get-PnPWeb -Includes RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings).RoleAssignments
 Connect-SPOSite -Url $DestinationUrl
 
 foreach ($group in $sourceGroups) {
@@ -228,6 +240,19 @@ foreach ($group in $sourceGroups) {
         }
     } catch {
         Write-Log "Error creating group '$($group.Title)': $_" -Level WARN
+    }
+}
+
+# Reapply web-level roles for the SharePoint groups created above.
+foreach ($assignment in $sourceRoleAssignments) {
+    if ($assignment.Member.PrincipalType -ne "SharePointGroup") { continue }
+    foreach ($role in ($assignment.RoleDefinitionBindings | Select-Object -ExpandProperty Name)) {
+        try {
+            Set-PnPWebPermission -Group $assignment.Member.Title -AddRole $role -ErrorAction Stop | Out-Null
+            Write-Log "Role '$role' assigned to group '$($assignment.Member.Title)'" -Level SUCCESS
+        } catch {
+            Write-Log "Error assigning role '$role' to '$($assignment.Member.Title)': $_" -Level WARN
+        }
     }
 }
 #endregion

@@ -134,8 +134,8 @@ $migrationResults = [System.Collections.Generic.List[PSObject]]::new()
 Write-Log "=== PHASE 1: Analyzing SOURCE site ===" -Level PHASE
 ConnectSource
 
-$sourceWeb     = Get-PnPWeb -Includes Title, Description, Language, RegionalSettings
-$sourceLists   = Get-PnPList | Where-Object { -not $_.Hidden }
+$sourceWeb     = Get-PnPWeb -Includes Title, Description, Language, RegionalSettings, WebTemplate
+$sourceLists   = Get-PnPList -Includes RootFolder | Where-Object { -not $_.Hidden }
 $sourcePages   = Get-PnPListItem -List "Site Pages" -PageSize 200 -ErrorAction SilentlyContinue
 
 Write-Log "Source site: $($sourceWeb.Title)"
@@ -175,7 +175,14 @@ foreach ($list in $sourceLists | Where-Object { $_.BaseTemplate -eq 101 }) {
         $fileRef = $item["FileRef"]
         if (-not $fileRef) { continue }
         try {
-            Get-PnPFile -Url $fileRef -Path $localLibPath -FileName $item["FileLeafRef"] -AsFile -Force
+            $relativeFilePath = $fileRef.Substring($list.RootFolder.ServerRelativeUrl.Length).TrimStart('/')
+            $relativeFolder = Split-Path $relativeFilePath -Parent
+            $localFilePath = $localLibPath
+            if ($relativeFolder -and $relativeFolder -ne '.') {
+                $localFilePath = Join-Path -Path $localFilePath -ChildPath $relativeFolder
+            }
+            if (-not (Test-Path $localFilePath)) { New-Item -ItemType Directory -Path $localFilePath -Force | Out-Null }
+            Get-PnPFile -Url $fileRef -Path $localFilePath -FileName $item["FileLeafRef"] -AsFile -Force
         } catch {
             Write-Log "  Download failed: $fileRef - $_" -Level WARN
             $migrationResults.Add([PSCustomObject]@{
@@ -195,19 +202,31 @@ Write-Log "=== PHASE 4: Preparing DESTINATION site ===" -Level PHASE
 
 Connect-PnPOnline -Url $DestTenantAdminUrl -ClientId $DestClientId -Thumbprint $DestThumbprint -Tenant $DestTenantId
 
-$destAlias = ($DestSiteUrl -split "/sites/")[1]
+$destAlias = ([Uri]$DestSiteUrl).Segments[-1].Trim('/')
+if (-not $destAlias) { throw "DestSiteUrl must include a managed path and site alias, for example /sites/HR." }
 $existingDestSite = Get-PnPTenantSite -Url $DestSiteUrl -ErrorAction SilentlyContinue
 
 if (-not $existingDestSite) {
     Write-Log "Creating destination site: $DestSiteUrl"
     if ($PSCmdlet.ShouldProcess($DestSiteUrl, "Create destination site")) {
-        New-PnPSite -Type TeamSite `
-            -Title $sourceWeb.Title `
-            -Alias $destAlias `
-            -Description $sourceWeb.Description `
-            -Lcid $sourceWeb.Language `
-            -ErrorAction Stop | Out-Null
-        Write-Log "Destination site created successfully." -Level SUCCESS
+        if ($sourceWeb.WebTemplate -like "SITEPAGEPUBLISHING*") {
+            $createdSite = New-PnPSite -Type CommunicationSite `
+                -Title $sourceWeb.Title `
+                -Url $DestSiteUrl `
+                -Lcid $sourceWeb.Language `
+                -ErrorAction Stop
+        } else {
+            $createdSite = New-PnPSite -Type TeamSite `
+                -Title $sourceWeb.Title `
+                -Alias $destAlias `
+                -Description $sourceWeb.Description `
+                -Lcid $sourceWeb.Language `
+                -ErrorAction Stop
+        }
+        if ($createdSite.Url) {
+            $DestSiteUrl = $createdSite.Url
+        }
+        Write-Log "Destination site created successfully: $DestSiteUrl" -Level SUCCESS
     }
 } else {
     Write-Log "Destination site already exists: $DestSiteUrl" -Level WARN
@@ -237,12 +256,18 @@ $contentRoot = "$WorkingFolder\Content"
 if (Test-Path $contentRoot) {
     $localLibs = Get-ChildItem -Path $contentRoot -Directory
     foreach ($lib in $localLibs) {
+        $destinationLibrary = Get-PnPList -Identity $lib.Name -Includes RootFolder -ErrorAction Stop
+        $destinationLibraryRoot = $destinationLibrary.RootFolder.ServerRelativeUrl
         $files = Get-ChildItem -Path $lib.FullName -File -Recurse
         Write-Log "Uploading $($files.Count) file(s) to library '$($lib.Name)'"
         foreach ($file in $files) {
             try {
                 $relativePath = $file.FullName.Substring($lib.FullName.Length + 1)
-                $destFolder   = "$($lib.Name)/" + ($relativePath | Split-Path -Parent)
+                $relativeFolder = $relativePath | Split-Path -Parent
+                $destFolder = $destinationLibraryRoot
+                if ($relativeFolder -and $relativeFolder -ne '.') {
+                    $destFolder = "$destFolder/$relativeFolder"
+                }
                 Add-PnPFile -Path $file.FullName -Folder $destFolder -ErrorAction Stop | Out-Null
                 $migrationResults.Add([PSCustomObject]@{
                     Status = "SUCCESS"; Type = "File"; Source = $file.FullName; Detail = "OK"
@@ -263,6 +288,7 @@ Write-Log "=== PHASE 7: Replicating permissions with user mapping ===" -Level PH
 
 ConnectSource
 $sourceGroups = Get-PnPGroup
+$sourceRoleAssignments = (Get-PnPWeb -Includes RoleAssignments, RoleAssignments.Member, RoleAssignments.RoleDefinitionBindings).RoleAssignments
 ConnectDest
 
 foreach ($group in $sourceGroups) {
@@ -283,6 +309,19 @@ foreach ($group in $sourceGroups) {
             Write-Log "  Added $destUpn to group '$($group.Title)'" -Level SUCCESS
         } catch {
             Write-Log "  Failed to add $destUpn to group '$($group.Title)': $_" -Level WARN
+        }
+    }
+}
+
+# Replicate web-level roles for the migrated SharePoint groups.
+foreach ($assignment in $sourceRoleAssignments) {
+    if ($assignment.Member.PrincipalType -ne "SharePointGroup") { continue }
+    foreach ($role in ($assignment.RoleDefinitionBindings | Select-Object -ExpandProperty Name)) {
+        try {
+            Set-PnPWebPermission -Group $assignment.Member.Title -AddRole $role -ErrorAction Stop | Out-Null
+            Write-Log "  Assigned role '$role' to group '$($assignment.Member.Title)'" -Level SUCCESS
+        } catch {
+            Write-Log "  Failed to assign role '$role' to '$($assignment.Member.Title)': $_" -Level WARN
         }
     }
 }

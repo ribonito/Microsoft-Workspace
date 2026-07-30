@@ -36,13 +36,13 @@ Register-PnPEntraIDApp `
 
 | # | Script | Propósito | Tipo |
 |---|--------|-----------|------|
-| 01 | `01_SPO-PreMigration-Assessment.ps1` | Inventario completo pre-migración | Análisis |
-| 02 | `02_SPO-SiteMigration-ClassicToModern.ps1` | Migración clásico → moderno | Migración |
-| 03 | `03_SPO-TenantToTenant-Migration.ps1` | Migración Tenant a Tenant (T2T) | Migración |
-| 04 | `04_SPO-HubSpoke-Provisioning.ps1` | Arquitectura Hub-Spoke completa | Provisioning |
-| 05 | `05_SPO-PostMigration-Validation.ps1` | Validación y remediación post-migración | Validación |
-| 06 | `06_SPO-Permissions-Management.ps1` | Gestión masiva de permisos | Gobernanza |
-| 07 | `07_SPO-SiteDesigns-Management.ps1` | Site Designs y Site Scripts | Estandarización |
+| 01 | `SPO-001_PreMigration-Assessment.ps1` | Inventario completo pre-migración | Análisis |
+| 02 | `SPO-002_SiteMigration-ClassicToModern.ps1` | Migración clásico → moderno | Migración |
+| 03 | `SPO-003_TenantToTenant-Migration.ps1` | Migración Tenant a Tenant (T2T) | Migración |
+| 04 | `SPO-004_HubSpoke-Provisioning.ps1` | Arquitectura Hub-Spoke completa | Provisioning |
+| 05 | `SPO-005_PostMigration-Validation.ps1` | Validación y remediación post-migración | Validación |
+| 06 | `SPO-006_Permissions-Management.ps1` | Gestión masiva de permisos | Gobernanza |
+| 07 | `SPO-007_SiteDesigns-Management.ps1` | Site Designs y Site Scripts | Estandarización |
 
 ---
 
@@ -78,7 +78,7 @@ Register-PnPEntraIDApp `
 
 ### 01 – Assessment
 ```powershell
-.\01_SPO-PreMigration-Assessment.ps1 `
+.\SPO-001_PreMigration-Assessment.ps1 `
     -TenantAdminUrl "https://contoso-admin.sharepoint.com" `
     -ClientId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" `
     -Thumbprint "AABB..." `
@@ -88,7 +88,7 @@ Register-PnPEntraIDApp `
 
 ### 02 – Clásico a Moderno
 ```powershell
-.\02_SPO-SiteMigration-ClassicToModern.ps1 `
+.\SPO-002_SiteMigration-ClassicToModern.ps1 `
     -SourceUrl "https://contoso.sharepoint.com/sites/Old" `
     -DestinationUrl "https://contoso.sharepoint.com/sites/New" `
     -ClientId "xxxx" -Thumbprint "AABB" -TenantId "yyyy" `
@@ -97,7 +97,7 @@ Register-PnPEntraIDApp `
 
 ### 03 – Tenant a Tenant
 ```powershell
-.\03_SPO-TenantToTenant-Migration.ps1 `
+.\SPO-003_TenantToTenant-Migration.ps1 `
     -SourceTenantAdminUrl "https://source-admin.sharepoint.com" `
     -DestTenantAdminUrl   "https://dest-admin.sharepoint.com" `
     -SourceSiteUrl "https://source.sharepoint.com/sites/HR" `
@@ -119,7 +119,7 @@ $spokes = @(
     @{ Title='IT Department'; Alias='it-dept'; Template='TeamSite'; PnPTemplate='C:\IT.xml' },
     @{ Title='HR Portal'; Alias='hr-portal'; Template='CommunicationSite'; PnPTemplate='C:\HR.xml' }
 )
-.\04_SPO-HubSpoke-Provisioning.ps1 `
+.\SPO-004_HubSpoke-Provisioning.ps1 `
     -TenantAdminUrl "https://contoso-admin.sharepoint.com" `
     -ClientId "xxxx" -Thumbprint "AABB" -TenantId "yyyy" `
     -HubTitle "Corporate Intranet" -HubAlias "corporate-intranet" `
@@ -129,7 +129,7 @@ $spokes = @(
 
 ### 05 – Validación Post-Migración
 ```powershell
-.\05_SPO-PostMigration-Validation.ps1 `
+.\SPO-005_PostMigration-Validation.ps1 `
     -SourceUrl "https://contoso.sharepoint.com/sites/Old" `
     -DestUrl   "https://contoso.sharepoint.com/sites/New" `
     -ClientId "xxxx" -Thumbprint "AABB" -TenantId "yyyy" `
@@ -139,30 +139,30 @@ $spokes = @(
 ### 06 – Gestión de Permisos
 ```powershell
 # Auditoría
-.\06_SPO-Permissions-Management.ps1 -SiteUrl "..." -Mode Audit ...
+.\SPO-006_Permissions-Management.ps1 -SiteUrl "..." -Mode Audit ...
 
 # Eliminar usuarios externos
-.\06_SPO-Permissions-Management.ps1 -SiteUrl "..." -Mode RemoveExternal ...
+.\SPO-006_Permissions-Management.ps1 -SiteUrl "..." -Mode RemoveExternal ...
 
 # Reemplazar grupo de seguridad (útil en T2T)
-.\06_SPO-Permissions-Management.ps1 -SiteUrl "..." -Mode ReplaceGroup `
+.\SPO-006_Permissions-Management.ps1 -SiteUrl "..." -Mode ReplaceGroup `
     -OldGroupName "Source-Owners" -NewGroupName "Dest-Owners" ...
 ```
 
 ### 07 – Site Designs
 ```powershell
 # Crear design desde JSON
-.\07_SPO-SiteDesigns-Management.ps1 -Mode Create `
+.\SPO-007_SiteDesigns-Management.ps1 -Mode Create `
     -SiteDesignName "Departmental Template" `
     -SiteScriptJsonPath "C:\script.json" -WebTemplate "64" ...
 
 # Aplicar design a múltiples sitios
-.\07_SPO-SiteDesigns-Management.ps1 -Mode ApplyToSites `
+.\SPO-007_SiteDesigns-Management.ps1 -Mode ApplyToSites `
     -SiteDesignName "Departmental Template" `
     -TargetSiteUrls @("https://contoso.sharepoint.com/sites/IT","...") ...
 
 # Exportar catálogo completo
-.\07_SPO-SiteDesigns-Management.ps1 -Mode ExportAll ...
+.\SPO-007_SiteDesigns-Management.ps1 -Mode ExportAll ...
 ```
 
 ---
