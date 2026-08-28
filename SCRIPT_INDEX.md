@@ -1,6 +1,6 @@
 # 📘 Microsoft Workspace – Script Index
 > **All scripts are in English, organized by technology/product, and individually numbered.**
-> Last updated: June 2026 | Maintainer: Josep Canas – M365 Solutions Architect
+> Last updated: August 2026 | Maintainer: Josep Canas – M365 Solutions Architect
 
 ---
 
@@ -25,6 +25,8 @@
 
 ## 📧 Exchange Online (EXO)
 
+> Path: `Cloud_Scripts/Exchange_Management/`
+
 | # | File | Description |
 |---|------|-------------|
 | EXO-001 | EXO-001_ATP-Implementation.ps1 | Set up Microsoft Defender for Office 365 – Safe Attachments + Safe Links |
@@ -39,24 +41,26 @@
 
 ## 📦 SharePoint Online / PnP Modern (SPO)
 
-> All migration scripts in: `Cloud_Scripts/SharePoint/Migrations/`
+> Path: `Cloud_Scripts/SharePoint/` and `Cloud_Scripts/SharePoint/Migrations/`
 
 | # | File | Description |
 |---|------|-------------|
-| SPO-001 | SPO-001_PreMigration-Assessment.ps1 | Full pre-migration inventory: sites, libraries, permissions, Hub membership |
-| SPO-002 | SPO-002_SiteMigration-ClassicToModern.ps1 | Migrate classic/on-premises site to modern SPO via PnP Template |
-| SPO-003 | SPO-003_TenantToTenant-Migration.ps1 | Full Tenant-to-Tenant migration (8 phases, user mapping CSV, report) |
-| SPO-004 | SPO-004_HubSpoke-Provisioning.ps1 | Provision a Hub-Spoke architecture with navigation and Site Designs |
-| SPO-005 | SPO-005_PostMigration-Validation.ps1 | Validate migration completeness (item counts, permissions, pages) + auto-remediate |
-| SPO-006 | SPO-006_Permissions-Management.ps1 | Audit/break/restore inheritance, remove external users, replace security groups |
-| SPO-007 | SPO-007_SiteDesigns-Management.ps1 | Create, apply, export and cleanup Site Designs and Site Scripts |
+| SPO-001 | Migrations/SPO-001_PreMigration-Assessment.ps1 | Full pre-migration inventory: sites, libraries, permissions, Hub membership |
+| SPO-002 | Migrations/SPO-002_SiteMigration-ClassicToModern.ps1 | Migrate classic/on-premises site to modern SPO via PnP Template |
+| SPO-003 | Migrations/SPO-003_TenantToTenant-Migration.ps1 | Full Tenant-to-Tenant migration (8 phases, user mapping CSV, report) |
+| SPO-004 | Migrations/SPO-004_HubSpoke-Provisioning.ps1 | Provision a Hub-Spoke architecture with navigation and Site Designs |
+| SPO-005 | Migrations/SPO-005_PostMigration-Validation.ps1 | Validate migration completeness (item counts, permissions, pages) + auto-remediate |
+| SPO-006 | Migrations/SPO-006_Permissions-Management.ps1 | Audit/break/restore inheritance, remove external users, replace security groups |
+| SPO-007 | Migrations/SPO-007_SiteDesigns-Management.ps1 | Create, apply, export and cleanup Site Designs and Site Scripts |
 | SPO-008 | SPO-008_Sharepoint-Bulk-Creation.ps1 | Bulk create Microsoft Teams from a CSV template |
-| SPO-009 | SPO-009_Migration-CheckFiles-Scan.ps1 | Scan and log local files recursively to CSV before SharePoint Online migration |
-| SPO-010 | SPO-010_Migration-CheckFiles-Analyze.ps1 | Analyze logged files recursively against SharePoint Online size/path/extension limits |
+| SPO-009 | Migrations/SPO-009_Migration-CheckFiles-Scan.ps1 | Scan and log local files recursively to CSV before SharePoint Online migration |
+| SPO-010 | Migrations/SPO-010_Migration-CheckFiles-Analyze.ps1 | Analyze logged files recursively against SharePoint Online size/path/extension limits |
 
 ---
 
 ## 💬 Microsoft Teams (TEA)
+
+> Path: `Cloud_Scripts/Teams/`
 
 | # | File | Description |
 |---|------|-------------|
@@ -69,7 +73,20 @@
 
 ---
 
+## 🔐 Entra ID (Identity)
+
+> Path: `Cloud_Scripts/Entra_ID/`
+
+| # | File | Description |
+|---|------|-------------|
+| M365-007 | M365-007_Export-CAPolicies.ps1 | Export Entra ID Conditional Access policies to CSV |
+| M365-009 | M365-009_Export-AzureADDevices.ps1 | Export Azure AD device report with BitLocker and owner info to CSV |
+
+---
+
 ## 📊 M365 Assessment (M365)
+
+> Path: `Cloud_Scripts/M365_Assessment/`
 
 | # | File | Description |
 |---|------|-------------|
@@ -79,9 +96,7 @@
 | M365-004 | M365-004_SPO-List-Inventory-CSOM.ps1 | SharePoint Online list inventory using CSOM assemblies |
 | M365-005 | M365-005_Report-M365.ps1 | Generate interactive HTML report on the M365 tenant |
 | M365-006 | M365-006_Security-Improvements.ps1 | Check and remediate tenant security baselines |
-| M365-007 | M365-007_Export-CAPolicies.ps1 | Export Entra ID Conditional Access policies to CSV |
 | M365-008 | M365-008_Reporting-Teams-Telephony.ps1 | Export Teams phone numbers by routing type |
-| M365-009 | M365-009_Export-AzureADDevices.ps1 | Export Azure AD device report with BitLocker and owner info to CSV |
 | M365-010 | M365-010_M365-Assessment-All.ps1 | Generate governance, data retention, compliance, and training reports |
 | M365-011 | M365-011_PowerBI-Report-Inventory.ps1 | Export inventory of Power BI workspaces and reports to CSV |
 | M365-012 | M365-012_M365-Licensing-SKU-Export.ps1 | Export subscribed licensing SKUs and friendly service plan names |
@@ -96,6 +111,8 @@
 ---
 
 ## 🖥️ Microsoft Intune / Endpoint (INT)
+
+> Path: `Cloud_Scripts/Intune/Scripts/` (cloud) and `OnPremises_Scripts/Intune/` (endpoint)
 
 | # | File | Description |
 |---|------|-------------|
@@ -123,36 +140,41 @@
 
 ## 🔧 Utilities (UTL)
 
-| # | File | Description |
-|---|------|-------------|
-| UTL-001 | UTL-001_Connect-O365Services.ps1 | Connect to all M365 services with a single script (MFA + CBA support) |
-| UTL-002 | UTL-002_M365-Cache-Cleaning.ps1 | Interactive menu to clear cache for M365 desktop apps |
-| UTL-003 | UTL-003_Set-ProxyAndTLS.ps1 | Configure system proxy + enforce TLS 1.2 for PowerShell sessions |
-| UTL-004 | UTL-004_Update-M365PSModules.ps1 | Update and maintain all M365 PowerShell modules, clean old versions |
-| UTL-005 | UTL-005_Install-PSModules.ps1 | Bootstrapping utility to install all required M365 PowerShell modules |
-| UTL-006 | UTL-006_Combine-CsvFiles.ps1 | Merge multiple Autopilot device export CSVs into a single import file |
-| UTL-007 | UTL-007_Get-Daily-Bing-Picture.ps1 | Download daily Bing wallpaper and save to Teams background folder |
-| UTL-008 | UTL-008_Connect-Exchange-SPO-Legacy.ps1 | Establish legacy basic auth connections to Exchange Online and SharePoint |
-| UTL-009 | UTL-009_Connect-All.ps1 | Installs and connects to all common M365 PowerShell modules |
-| UTL-010 | UTL-010_Connect-AzureAD.ps1 | Connect to Azure Active Directory v2 / Entra ID with or without MFA |
-| UTL-011 | UTL-011_Connect-Commerce.ps1 | Connect to M365 Commerce module to manage subscriptions and purchases |
-| UTL-012 | UTL-012_Connect-Exchange-Online.ps1 | Establish modern authentication connections to Exchange Online |
-| UTL-013 | UTL-013_Connect-Exchange-Online-Basic-Deprecated.ps1 | Connect to Exchange Online using legacy Basic Authentication (Deprecated) |
-| UTL-014 | UTL-014_Connect-MSOnline.ps1 | Connect to legacy MSOnline Service module with or without MFA |
-| UTL-015 | UTL-015_Connect-Teams.ps1 | Connect to Microsoft Teams PowerShell module (including GCC/DoD) |
-| UTL-016 | UTL-016_Connect-Security-Compliance.ps1 | Connect to the M365 Security & Compliance Center via modern IPPSSession |
-| UTL-017 | UTL-017_Connect-SharePoint-Online.ps1 | Connect to the SharePoint Online Admin Center service |
-| UTL-018 | UTL-018_Connect-Skype-Online-Deprecated.ps1 | Connect to Skype for Business Online via legacy connector (Deprecated) |
-| UTL-019 | UTL-019_Connect-SharePoint-PnP.ps1 | Connect to SharePoint Online using modern PnP PowerShell |
-| UTL-020 | UTL-020_Get-RandomAlphaNumString.ps1 | Helper function: generate a random alphanumeric string of custom length |
-| UTL-021 | UTL-021_Get-Timestamp.ps1 | Helper function: generate standard timestamp string for export files |
-| UTL-022 | UTL-022_New-Script-Template.ps1 | Template script: report builder collection structure and CSV output |
-| UTL-023 | UTL-023_New-Function-Template.ps1 | Template function: standard CmdletBinding and positional parameter block |
-| UTL-024 | UTL-024_Office-Apps-Management.ps1 | Manage local Office Click-to-Run activations and build version updates |
+> Path: `Cloud_Scripts/Utilities/` (root), `Connection/`, `Common/`, `Templates/`
+> On-premises utilities: `OnPremises_Scripts/Utilities/`
+
+| # | File | Path | Description |
+|---|------|------|-------------|
+| UTL-001 | UTL-001_Connect-O365Services.ps1 | Utilities/ | Connect to all M365 services with a single script (MFA + CBA support) |
+| UTL-002 | UTL-002_M365-Cache-Cleaning.ps1 | OnPremises/Utilities/ | Interactive menu to clear cache for M365 desktop apps |
+| UTL-003 | UTL-003_Set-ProxyAndTLS.ps1 | OnPremises/Utilities/ | Configure system proxy + enforce TLS 1.2 for PowerShell sessions |
+| UTL-004 | UTL-004_Update-M365PSModules.ps1 | Utilities/ | Update and maintain all M365 PowerShell modules, clean old versions |
+| UTL-005 | UTL-005_Install-PSModules.ps1 | OnPremises/Utilities/ | Bootstrapping utility to install all required M365 PowerShell modules |
+| UTL-006 | UTL-006_Combine-CsvFiles.ps1 | OnPremises/Utilities/ | Merge multiple Autopilot device export CSVs into a single import file |
+| UTL-007 | UTL-007_Get-Daily-Bing-Picture.ps1 | Utilities/ | Download daily Bing wallpaper and save to Teams background folder |
+| UTL-008 | UTL-008_Connect-Exchange-SPO-Legacy.ps1 | Utilities/Connection/ | Establish legacy basic auth connections to Exchange Online and SharePoint |
+| UTL-009 | UTL-009_Connect-All.ps1 | Utilities/Connection/ | Installs and connects to all common M365 PowerShell modules |
+| UTL-010 | UTL-010_Connect-AzureAD.ps1 | Utilities/Connection/ | Connect to Azure Active Directory v2 / Entra ID with or without MFA |
+| UTL-011 | UTL-011_Connect-Commerce.ps1 | Utilities/Connection/ | Connect to M365 Commerce module to manage subscriptions and purchases |
+| UTL-012 | UTL-012_Connect-Exchange-Online.ps1 | Utilities/Connection/ | Establish modern authentication connections to Exchange Online |
+| UTL-013 | UTL-013_Connect-Exchange-Online-Basic-Deprecated.ps1 | Utilities/Connection/ | Connect to Exchange Online using legacy Basic Authentication (Deprecated) |
+| UTL-014 | UTL-014_Connect-MSOnline.ps1 | Utilities/Connection/ | Connect to legacy MSOnline Service module with or without MFA |
+| UTL-015 | UTL-015_Connect-Teams.ps1 | Utilities/Connection/ | Connect to Microsoft Teams PowerShell module (including GCC/DoD) |
+| UTL-016 | UTL-016_Connect-Security-Compliance.ps1 | Utilities/Connection/ | Connect to the M365 Security & Compliance Center via modern IPPSSession |
+| UTL-017 | UTL-017_Connect-SharePoint-Online.ps1 | Utilities/Connection/ | Connect to the SharePoint Online Admin Center service |
+| UTL-018 | UTL-018_Connect-Skype-Online-Deprecated.ps1 | Utilities/Connection/ | Connect to Skype for Business Online via legacy connector (Deprecated) |
+| UTL-019 | UTL-019_Connect-SharePoint-PnP.ps1 | Utilities/Connection/ | Connect to SharePoint Online using modern PnP PowerShell |
+| UTL-020 | UTL-020_Get-RandomAlphaNumString.ps1 | Utilities/Common/ | Helper function: generate a random alphanumeric string of custom length |
+| UTL-021 | UTL-021_Get-Timestamp.ps1 | Utilities/Common/ | Helper function: generate standard timestamp string for export files |
+| UTL-022 | UTL-022_New-Script-Template.ps1 | Utilities/Templates/ | Template script: report builder collection structure and CSV output |
+| UTL-023 | UTL-023_New-Function-Template.ps1 | Utilities/Templates/ | Template function: standard CmdletBinding and positional parameter block |
+| UTL-024 | UTL-024_Office-Apps-Management.ps1 | Office_Apps/ | Manage local Office Click-to-Run activations and build version updates |
 
 ---
 
 ## 🏢 On-Premises (OPR)
+
+> Path: `OnPremises_Scripts/`
 
 | # | File | Description |
 |---|------|-------------|
@@ -163,6 +185,8 @@
 ---
 
 ## 🗂️ Migration (MIG)
+
+> Path: `Cloud_Scripts/Migration/`
 
 | # | File | Description |
 |---|------|-------------|
@@ -175,6 +199,7 @@
 ```
 ─── Assessment Phase ────────────────────────────────────────
   M365-001 → M365-002 → M365-003 → M365-004 → M365-009 → M365-010 → M365-011 → M365-012 → M365-013 → M365-014 → M365-017 → M365-018 → M365-019
+  M365-007 (Entra ID / CA policies)
   TEA-001  → TEA-002  → TEA-003  → TEA-004  → TEA-006
   SPO-001  → SPO-009  → SPO-010  → SPO-006 (Audit mode)
   OPR-001  → OPR-002  → OPR-003
@@ -190,8 +215,10 @@
   SPO-006  (Permission remediation)
 
 ─── Intune / Endpoint Phase ─────────────────────────────────
-  INT-001 → INT-002 → INT-003 → INT-004 → INT-005 → INT-006 → INT-007 → INT-008 → INT-009 → INT-010 → INT-011 → INT-012 → INT-013 → INT-014 → INT-015 → INT-016 → INT-017 → INT-018 → INT-019
+  INT-001 → INT-002 → INT-003 → INT-004 → INT-005 → INT-006 → INT-007 → INT-008
+  INT-009 → INT-010 → INT-011 → INT-012 → INT-013 → INT-014 → INT-015 → INT-016 → INT-017 → INT-018 → INT-019
 
 ─── Utilities (use as needed) ────────────────────────────────
-  UTL-001 → UTL-003 → UTL-002 → UTL-004 → UTL-005 → UTL-006 → UTL-009 → UTL-010 → UTL-011 → UTL-012 → UTL-014 → UTL-015 → UTL-016 → UTL-017 → UTL-019 → UTL-024
+  UTL-001 → UTL-003 → UTL-002 → UTL-004 → UTL-005 → UTL-006
+  UTL-009 → UTL-010 → UTL-011 → UTL-012 → UTL-014 → UTL-015 → UTL-016 → UTL-017 → UTL-019 → UTL-024
 ```

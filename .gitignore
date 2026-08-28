@@ -1,0 +1,28 @@
+# Generated reports and exports
+Reports/*.csv
+Reports/*.html
+Reports/*.xlsx
+!Reports/.gitkeep
+
+# Tenant backups (large JSON exports)
+Cloud_Scripts/Intune/Backups/*/
+!Cloud_Scripts/Intune/Backups/Template/
+
+# Certificates and secrets
+*.pfx
+*.p12
+*.pem
+*credentials*
+*secrets*
+.env
+.env.*
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Win32 package build artifacts
+*.intunewin
+Cloud_Scripts/Intune/Win32_App_Packages/**/Output/
