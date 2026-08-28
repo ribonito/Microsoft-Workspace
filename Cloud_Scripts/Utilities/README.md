@@ -1,22 +1,22 @@
 # Utilities
 
-Herramientas transversales para conexión, mantenimiento y plantillas.
+Cross-cutting tools for connectivity, maintenance, and templates.
 
-## Estructura
+## Structure
 
-| Carpeta | Contenido |
-|---------|-----------|
-| `Connection/` | Conectores individuales por servicio (EXO, Teams, SPO, Graph…) |
-| `Common/` | Funciones reutilizables (`Get-Timestamp`, `Get-RandomAlphaNumString`) |
-| `Templates/` | Plantillas para nuevos scripts y funciones |
-| *(raíz)* | Conector multi-servicio, actualización de módulos, utilidades generales |
+| Folder | Contents |
+|--------|----------|
+| `Connection/` | Individual per-service connectors (EXO, Teams, SPO, Graph, etc.) |
+| `Common/` | Reusable functions (`Get-Timestamp`, `Get-RandomAlphaNumString`) |
+| `Templates/` | Templates for new scripts and functions |
+| *(root)* | Multi-service connector, module updates, general utilities |
 
-## Punto de entrada recomendado
+## Recommended Entry Point
 
 ```powershell
-# Conectar a todos los servicios M365 de una vez
+# Connect to all M365 services at once
 .\UTL-001_Connect-O365Services.ps1
 
-# Solo Exchange Online y Teams
+# Exchange Online and Teams only
 .\UTL-001_Connect-O365Services.ps1 -Services ExchangeOnline, MSTeams
 ```

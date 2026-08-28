@@ -1,15 +1,15 @@
 # Microsoft Teams
 
-Scripts de administración, inventario y gobernanza de Microsoft Teams.
+Administration, inventory, and governance scripts for Microsoft Teams.
 
-| Prefijo | Uso |
-|---------|-----|
-| `TEA-NNN` | Inventarios, políticas de retención, telefonía y conferencias |
+| Prefix | Usage |
+|--------|-------|
+| `TEA-NNN` | Inventories, retention policies, telephony, and conferencing |
 
-## Requisitos
+## Requirements
 
 ```powershell
 Install-Module MicrosoftTeams -Force
-# o conexión unificada:
+# or unified connection:
 .\Cloud_Scripts\Utilities\UTL-001_Connect-O365Services.ps1 -Services MSTeams
 ```

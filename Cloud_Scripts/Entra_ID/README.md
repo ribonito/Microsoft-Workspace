@@ -1,13 +1,13 @@
 # Entra ID (Azure AD)
 
-Scripts de identidad, dispositivos y acceso condicional.
+Identity, device, and Conditional Access scripts.
 
-| Script | Descripción |
+| Script | Description |
 |--------|-------------|
-| `M365-007_Export-CAPolicies.ps1` | Exportar políticas de Acceso Condicional |
-| `M365-009_Export-AzureADDevices.ps1` | Inventario de dispositivos registrados en Entra ID |
+| `M365-007_Export-CAPolicies.ps1` | Export Conditional Access policies |
+| `M365-009_Export-AzureADDevices.ps1` | Inventory of devices registered in Entra ID |
 
-## Requisitos
+## Requirements
 
 ```powershell
 Install-Module Microsoft.Graph -Force
