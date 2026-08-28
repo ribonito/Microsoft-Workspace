@@ -20,7 +20,7 @@ Microsoft-Workspace/
 │   ├── SharePoint/             # SPO, PnP migrations, provisioning
 │   ├── Teams/                  # Inventory, retention, telephony
 │   └── Utilities/              # Connectivity, modules, templates
-│       ├── Connection/         # Per-service connectors (UTL-009 to UTL-019)
+│       ├── Connection/         # Per-service connectors (UTL-009 to UTL-035)
 │       ├── Common/             # Helper functions (UTL-020, UTL-021)
 │       └── Templates/          # Script/function templates (UTL-022, UTL-023)
 ├── OnPremises_Scripts/         # AD, on-prem Exchange, local endpoints
