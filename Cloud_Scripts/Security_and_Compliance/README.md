@@ -1,17 +1,17 @@
 # Security & Compliance (Purview)
 
-Espacio reservado para scripts de **Microsoft Purview**, **Compliance Center** y **Defender**.
+Reserved space for **Microsoft Purview**, **Compliance Center**, and **Defender** scripts.
 
-## Scripts relacionados actuales
+## Current Related Scripts
 
-| Script | Ubicación | Descripción |
-|--------|-----------|-------------|
+| Script | Location | Description |
+|--------|----------|-------------|
 | `EXO-001` | Exchange_Management/ | Defender for Office 365 – Safe Attachments + Safe Links |
-| `M365-006` | M365_Assessment/ | Baseline de seguridad del tenant |
-| `UTL-016` | Utilities/Connection/ | Conexión al Security & Compliance Center |
+| `M365-006` | M365_Assessment/ | Tenant security baseline |
+| `UTL-016` | Utilities/Connection/ | Security & Compliance Center connection |
 
-## Próximas incorporaciones sugeridas
+## Suggested Future Additions
 
-- Exportación de políticas DLP
-- Informes de eDiscovery
-- Auditoría de etiquetas de sensibilidad
+- DLP policy export
+- eDiscovery reports
+- Sensitivity label audit
