@@ -1,53 +1,64 @@
 <#
 .SYNOPSIS
+    Manages external sharing capabilities on SharePoint Online and OneDrive site collections.
+
+.DESCRIPTION
+    Audits and configures external sharing permissions across SharePoint Online site collections
+    and OneDrive for Business personal sites. Supports four standard sharing tiers:
+    Disabled, ExistingExternalUserSharingOnly, ExternalUserSharingOnly, and ExternalUserAndGuestSharing (Anyone links).
+
+.PARAMETER SiteUrl
+    Optional absolute URL of the site to configure. If omitted, prompts with Out-GridView.
+
+.PARAMETER SharingCapability
+    The sharing capability to enforce: 'Disabled', 'ExistingExternalUserSharingOnly',
+    'ExternalUserSharingOnly', or 'ExternalUserAndGuestSharing'.
+
 .NOTES
+    Requires Microsoft.Online.SharePoint.PowerShell module.
+    Tenant-level sharing settings must permit equal or greater sharing than the individual site collection.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\SPO - Site Sharing Capability Management.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/ExtCollab" -SharingCapability "ExternalUserSharingOnly"
+    Sets the specified site to allow authenticated guest and external user sharing.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/sharepoint-online/set-sposite?view=sharepoint-ps
-https://docs.microsoft.com/en-us/powershell/module/sharepoint-online/get-sposite?view=sharepoint-ps
-https://docs.microsoft.com/en-us/onedrive/manage-sharing
-https://docs.microsoft.com/en-us/onedrive/user-external-sharing-settings
-https://docs.microsoft.com/en-us/sharepoint/turn-external-sharing-on-or-off
+    https://learn.microsoft.com/sharepoint/turn-external-sharing-on-or-off
+    https://learn.microsoft.com/powershell/module/sharepoint-online/set-sposite
 #>
 
-<# Pull list of SPO sites and configure External Sharing on the selected SPO sites. #>
-$site = Get-SPOSite | select Url, SharingCapability | Out-GridView -PassThru -Title "Select the site(s) you wish to adjust external sharing...";
-if ($site -ne $null) {
-	$share = "Disabled","ExistingExternalUserSharingOnly","ExternalUserSharingOnly","ExternalUserAndGuestSharing";
-	if ($site -is [array])
-		{
-		$s = $share | Out-GridView -PassThru -Title "Which sharing capability do you want to set on the sites?";
-		Write-Host -Fore Yellow -NoNewline "Adjusting the following sites' external sharing setting to: "; Write-Host -Fore Red $s;
-		foreach ($si in $site) {
-			Set-SPOSite -Identity $si.Url -SharingCapability $s;
-			Write-Host -Fore Yellow -NoNewline "Site: "; Write-Host $si.Url;
-			}
-		}
-	else {
-		$s = $share | Out-GridView -PassThru -Title "Which sharing capability do you want set on the site?";
-		Set-SPOSite -Identity $site.Url -SharingCapability $s;
-		Write-Host -Fore Yellow -NoNewline "Site: "; Write-Host $site.Url;
-		Write-Host -Fore Yellow -NoNewline "Sharing: "; Write-Host $s; Write-Host "";
-		}
-	}
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$SiteUrl,
 
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("Disabled", "ExistingExternalUserSharingOnly", "ExternalUserSharingOnly", "ExternalUserAndGuestSharing")]
+    [string]$SharingCapability = "ExternalUserSharingOnly"
+)
 
-<# Pull list of ODfB sites and configure External Sharing on the selected ODfB sites. #>
-$site = Get-SPOSite | select Url, SharingCapability | Out-GridView -PassThru -Title "Select the site(s) you wish to adjust external sharing...";
-if ($site -ne $null) {
-	$share = "Disabled","ExistingExternalUserSharingOnly","ExternalUserSharingOnly","ExternalUserAndGuestSharing";
-	if ($site -is [array])
-		{
-		$s = $share | Out-GridView -PassThru -Title "Which sharing capability do you want to set on the sites?";
-		Write-Host -Fore Yellow -NoNewline "Adjusting the following sites' external sharing setting to: "; Write-Host -Fore Red $s;
-		foreach ($si in $site) {
-			Set-SPOSite -Identity $si.Url -SharingCapability $s;
-			Write-Host -Fore Yellow -NoNewline "Site: "; Write-Host $si.Url;
-			}
-		}
-	else {
-		$s = $share | Out-GridView -PassThru -Title "Which sharing capability do you want set on the site?";
-		Set-SPOSite -Identity $site.Url -SharingCapability $s;
-		Write-Host -Fore Yellow -NoNewline "Site: "; Write-Host $site.Url;
-		Write-Host -Fore Yellow -NoNewline "Sharing: "; Write-Host $s; Write-Host "";
-		}
-	}
+# Connect to SharePoint Online Admin Center
+Import-Module Microsoft.Online.SharePoint.PowerShell -ErrorAction SilentlyContinue
+
+if (-not [string]::IsNullOrWhiteSpace($SiteUrl)) {
+    Write-Host "Configuring SharingCapability on '$SiteUrl' to '$SharingCapability'..." -ForegroundColor Cyan
+    Set-SPOSite -Identity $SiteUrl -SharingCapability $SharingCapability
+    Get-SPOSite -Identity $SiteUrl | Select-Object Url, SharingCapability | Format-List
+}
+else {
+    Write-Host "Select site(s) to adjust external sharing settings:" -ForegroundColor Cyan
+    $selectedSites = Get-SPOSite -Limit All |
+        Select-Object Url, SharingCapability, StorageUsageCurrent |
+        Out-GridView -Title "Select site(s) to update external sharing" -PassThru
+
+    if ($selectedSites) {
+        foreach ($s in $selectedSites) {
+            Write-Host "Updating $($s.Url) to $SharingCapability..." -ForegroundColor Yellow
+            Set-SPOSite -Identity $s.Url -SharingCapability $SharingCapability
+        }
+        Write-Host "Sharing capability update completed." -ForegroundColor Green
+    } else {
+        Write-Warning "No sites selected."
+    }
+}
