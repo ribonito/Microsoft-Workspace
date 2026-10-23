@@ -1,46 +1,70 @@
 <#
 .SYNOPSIS
+    Configures and enforces mailbox auditing flags for Owner, Admin, and Delegate actions.
+
+.DESCRIPTION
+    Enables Exchange Online mailbox auditing and assigns a comprehensive baseline of audit actions
+    for Mailbox Owners, Administrators, and Delegates. Covers essential audit events including
+    MailItemsAccessed (with appropriate licensing), SendAs, SendOnBehalf, SoftDelete, HardDelete,
+    and folder permission modifications.
+
 .NOTES
-	> E5 or Compliance add-on needed for advanced audit events such as MailItemsAccessed.
-	> Search-UnifiedAuditLog vs Search-MailboxAuditLog.
-	> Owner: The possible enumeration values are 'None, Update, Copy, Move, MoveToDeletedItems, SoftDelete, HardDelete,    
-FolderBind, SendAs, SendOnBehalf, MessageBind, Create, MailboxLogin, UpdateFolderPermissions, AddFolderPermissions, ModifyFolderPermissions, RemoveFolderPermissions, UpdateInboxRules, UpdateCalendarDelegation,
-RecordDelete, ApplyRecord, MailItemsAccessed, Default, UpdateComplianceTag, Send, SearchQueryInitiated'.
-	> Admin: Supported audit operations for Admin are None, Create, FolderBind, MessageBind, SendAs, SendOnBehalf, SoftDelete, HardDelete, Update, Move, Copy, MoveToDeletedItems and 
-UpdateFolderPermissions.
-	> Delegate: Supported audit operations for Delegate are None, Create, FolderBind, SendAs, SendOnBehalf, SoftDelete, HardDelete, Update, Move, MoveToDeletedItems and UpdateFolderPermissions.
+    Requires ExchangeOnlineManagement module.
+    Purview Advanced Audit / E5 licensing is required for forensic events such as MailItemsAccessed.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\EXO - Mailbox Audit Flags Management.ps1
+    Enables auditing and assigns complete audit flag baselines across all user mailboxes.
+
 .LINK
-https://docs.microsoft.com/en-us/microsoft-365/compliance/enable-mailbox-auditing?view=o365-worldwide
-https://docs.microsoft.com/en-us/microsoft-365/compliance/search-the-audit-log-in-security-and-compliance?view=o365-worldwide
-https://docs.microsoft.com/en-us/microsoft-365/compliance/advanced-audit?view=o365-worldwide
-https://docs.microsoft.com/en-us/microsoft-365/compliance/set-up-advanced-audit?view=o365-worldwide
-https://docs.microsoft.com/en-us/microsoft-365/compliance/mailitemsaccessed-forensics-investigations?view=o365-worldwide
-https://docs.microsoft.com/en-us/powershell/module/exchange/set-mailbox?view=exchange-ps
+    https://learn.microsoft.com/purview/audit-mailboxes
+    https://learn.microsoft.com/powershell/module/exchange/set-mailbox
 #>
 
-<# Connect to EXO v2. #>
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$Identity,
 
+    [Parameter(Mandatory = $false)]
+    [switch]$AllMailboxes
+)
 
-<# Enable all regular audit flags on a specific mailbox. #>
-$User = "user@domain.com";
-$AuditOwnerFlags = @{Add="AddFolderPermissions", "ApplyRecord", "Create", "HardDelete", "MailboxLogin", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateCalendarDelegation", "UpdateInboxRules"}
-$AuditAdminFlags = @{Add="AddFolderPermissions", "ApplyRecord", "Copy", "Create", "HardDelete", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SendAs", "SendOnBehalf", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateCalendarDelegation", "UpdateInboxRules"}
-$AuditDelegateFlags = @{Add="AddFolderPermissions", "ApplyRecord", "Create", "HardDelete", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SendAs", "SendOnBehalf", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateInboxRules"}
-Set-Mailbox -Identity $User -AuditEnabled $true -AuditAdmin $AuditAdminFlags -AuditDelegate $AuditDelegateFlags -AuditOwner $AuditOwnerFlags;
+# Connect to Exchange Online
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+Connect-ExchangeOnline
 
-<# Enable all regular audit flags on all user mailboxes. #>
-$ListMailbox = Get-Mailbox -RecipientTypeDetails UserMailbox -ResultSize Unlimited;
-$ListMailbox | % {
-	Write-Host -NoNewline "Enabling all audit flags on "; Write-Host -Fore Yellow $_.PrimarySmtpAddress;
-	Set-Mailbox -Identity $_.DistinguishedName `
-	-AuditOwner @{Add="AddFolderPermissions", "ApplyRecord", "Create", "HardDelete", "MailboxLogin", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateCalendarDelegation", "UpdateInboxRules"} `
-	-AuditAdmin @{Add="AddFolderPermissions", "ApplyRecord", "Copy", "Create", "HardDelete", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SendAs", "SendOnBehalf", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateCalendarDelegation", "UpdateInboxRules"} `
-	-AuditDelegate @{Add="AddFolderPermissions", "ApplyRecord", "Create", "HardDelete", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SendAs", "SendOnBehalf", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateInboxRules"} `
-	-AuditEnabled $true};
+$AuditOwnerFlags = @("AddFolderPermissions", "ApplyRecord", "Create", "HardDelete", "MailboxLogin", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateCalendarDelegation", "UpdateInboxRules")
+$AuditAdminFlags = @("AddFolderPermissions", "ApplyRecord", "Copy", "Create", "HardDelete", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SendAs", "SendOnBehalf", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateCalendarDelegation", "UpdateInboxRules")
+$AuditDelegateFlags = @("AddFolderPermissions", "ApplyRecord", "Create", "HardDelete", "ModifyFolderPermissions", "Move", "MoveToDeletedItems", "RecordDelete", "RemoveFolderPermissions", "SendAs", "SendOnBehalf", "SoftDelete", "Update", "UpdateFolderPermissions", "UpdateInboxRules")
 
-<# Enable advanced audit flags. #>
-Set-Mailbox -Identity $User -AuditOwner @{Add="MailItemsAccessed", "Send", "SearchQueryInitiated"};
+if (-not [string]::IsNullOrWhiteSpace($Identity)) {
+    Write-Host "Enabling auditing flags on mailbox: $Identity..." -ForegroundColor Cyan
+    Set-Mailbox -Identity $Identity `
+                -AuditEnabled $true `
+                -AuditOwner @{Add = $AuditOwnerFlags} `
+                -AuditAdmin @{Add = $AuditAdminFlags} `
+                -AuditDelegate @{Add = $AuditDelegateFlags}
+    Write-Host "Audit configuration completed for $Identity." -ForegroundColor Green
+}
+elseif ($AllMailboxes) {
+    Write-Host "Enabling auditing on all user mailboxes in tenant..." -ForegroundColor Cyan
+    $ListMailboxes = Get-EXOMailbox -RecipientTypeDetails UserMailbox -ResultSize Unlimited
+    $count = ($ListMailboxes | Measure-Object).Count
+    $i = 1
+
+    foreach ($m in $ListMailboxes) {
+        Write-Progress -Activity "Configuring audit flags" -Status "$i of $count ($($m.PrimarySmtpAddress))" -PercentComplete (($i / $count) * 100)
+        Set-Mailbox -Identity $m.DistinguishedName `
+                    -AuditEnabled $true `
+                    -AuditOwner @{Add = $AuditOwnerFlags} `
+                    -AuditAdmin @{Add = $AuditAdminFlags} `
+                    -AuditDelegate @{Add = $AuditDelegateFlags} -ErrorAction SilentlyContinue
+        $i++
+    }
+    Write-Host "Auditing enabled across all $count user mailboxes." -ForegroundColor Green
+}
+else {
+    Write-Host "Usage: Specify -Identity <UserUPN> for a single mailbox or -AllMailboxes to audit all users." -ForegroundColor Yellow
+}

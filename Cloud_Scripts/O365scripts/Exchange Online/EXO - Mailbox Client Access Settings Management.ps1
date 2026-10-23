@@ -1,22 +1,77 @@
 <#
 .SYNOPSIS
+    Manages Client Access protocol settings (ActiveSync, POP3, IMAP4, OWA) on mailboxes.
+
+.DESCRIPTION
+    Controls protocol access permissions for Exchange ActiveSync (EAS), IMAP4, POP3, and MAPI
+    on Exchange Online mailboxes. Helps enforce organization security policies by disabling legacy
+    or unencrypted protocols across users or specific security groups.
+
+.PARAMETER Identity
+    The mailbox to configure. If omitted, can be applied tenant-wide or interactively.
+
+.PARAMETER ActiveSyncEnabled
+    Boolean flag to enable or disable Exchange ActiveSync. Defaults to false.
+
+.PARAMETER ImapEnabled
+    Boolean flag to enable or disable IMAP4 protocol. Defaults to false.
+
+.PARAMETER PopEnabled
+    Boolean flag to enable or disable POP3 protocol. Defaults to false.
+
 .NOTES
+    Requires ExchangeOnlineManagement module.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\EXO - Mailbox Client Access Settings Management.ps1 -Identity "user@contoso.com" -PopEnabled $false -ImapEnabled $false
+    Disables legacy POP and IMAP protocols for the specified user.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/exchange/client-access/set-casmailbox?view=exchange-ps
-https://docs.microsoft.com/en-us/powershell/module/exchange/get-distributiongroupmember?view=exchange-ps
-https://docs.microsoft.com/en-us/powershell/module/exchange/get-distributiongroup?view=exchange-ps
+    https://learn.microsoft.com/powershell/module/exchange/set-casmailbox
+    https://learn.microsoft.com/exchange/clients-and-mobile-in-exchange-online/enable-or-disable-pop3-or-imap4-access
 #>
 
-<# Connect to EXO v2. #>
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$Identity,
 
-<# Interactive selection of one or multiple security groups and pass through each of their members to bulk adjust EAS, POP and IMAP mail protocols. #>
-$eas = $false; $imap = $false; $pop = $false;
-Get-DistributionGroup -RecipientTypeDetails MailUniversalSecurityGroup | Out-GridView -PassThru | % {Get-DistributionGroupMember -Identity $_.DistinguishedName | % {Set-CasMailbox -Identity $_.DistinguishedName -ActiveSyncEnabled:$eas -ImapEnabled:$imap -PopEnabled:$pop}};
+    [Parameter(Mandatory = $false)]
+    [bool]$ActiveSyncEnabled = $false,
 
-<# Toggle EAS, IMAP and POP on all mailboxes. #>
-$eas = $false; $imap = $false; $pop = $false;
-Get-Mailbox -ResultSize Unlimited | % {Set-CasMailbox -Identity $_.DistinguishedName -ActiveSyncEnabled:$eas -ImapEnabled:$imap -PopEnabled:$pop};
+    [Parameter(Mandatory = $false)]
+    [bool]$ImapEnabled = $false,
+
+    [Parameter(Mandatory = $false)]
+    [bool]$PopEnabled = $false,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$AllMailboxes
+)
+
+# Connect to Exchange Online
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+Connect-ExchangeOnline
+
+if (-not [string]::IsNullOrWhiteSpace($Identity)) {
+    Write-Host "Configuring CAS protocols on mailbox '$Identity'..." -ForegroundColor Cyan
+    Set-CASMailbox -Identity $Identity `
+                   -ActiveSyncEnabled $ActiveSyncEnabled `
+                   -ImapEnabled $ImapEnabled `
+                   -PopEnabled $PopEnabled
+    Get-CASMailbox -Identity $Identity | Select-Object Identity, ActiveSyncEnabled, ImapEnabled, PopEnabled
+}
+elseif ($AllMailboxes) {
+    Write-Host "Disabling legacy CAS protocols (POP/IMAP/EAS) on all mailboxes..." -ForegroundColor Cyan
+    Get-EXOMailbox -ResultSize Unlimited | ForEach-Object {
+        Set-CASMailbox -Identity $_.DistinguishedName `
+                       -ActiveSyncEnabled $ActiveSyncEnabled `
+                       -ImapEnabled $ImapEnabled `
+                       -PopEnabled $PopEnabled -ErrorAction SilentlyContinue
+    }
+    Write-Host "Client access protocols updated tenant-wide." -ForegroundColor Green
+}
+else {
+    Write-Host "Usage: Specify -Identity <UPN> or -AllMailboxes with desired protocol flags." -ForegroundColor Yellow
+}

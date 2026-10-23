@@ -1,34 +1,80 @@
 <#
 .SYNOPSIS
-Mailbox Permission Management
+    Manages Exchange Online mailbox permissions (Full Access, Send As, Send on Behalf).
+
+.DESCRIPTION
+    Grants or revokes mailbox delegate permissions (such as FullAccess with AutoMapping disabled)
+    for individual users, shared mailboxes, or room/equipment resources. Prevents unwanted Outlook
+    client automapping bloat while ensuring secure delegated administrative or operational access.
+
+.PARAMETER MailboxIdentity
+    The target mailbox whose permissions are being adjusted.
+
+.PARAMETER DelegateUser
+    The user or security group being granted or revoked access.
+
+.PARAMETER AccessRights
+    The permission level to grant (e.g., FullAccess). Defaults to FullAccess.
+
+.PARAMETER AutoMapping
+    Boolean switch specifying whether Outlook should automatically map the delegated mailbox. Defaults to false.
+
 .NOTES
+    Requires ExchangeOnlineManagement module.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\EXO - Mailbox Permission Management.ps1 -MailboxIdentity "shared@contoso.com" -DelegateUser "helpdesk@contoso.com"
+    Grants helpdesk FullAccess to shared@contoso.com with AutoMapping disabled.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/exchange/mailboxes/add-mailboxpermission?view=exchange-ps
-https://docs.microsoft.com/en-us/powershell/module/exchange/mailboxes/remove-mailboxpermission?view=exchange-ps
-https://docs.microsoft.com/en-us/outlook/troubleshoot/domain-management/remove-automapping-for-shared-mailbox
+    https://learn.microsoft.com/powershell/module/exchange/add-mailboxpermission
+    https://learn.microsoft.com/powershell/module/exchange/remove-mailboxpermission
 #>
 
-<# Connect to EXO v2. #>
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$MailboxIdentity = "shared@domain.com",
 
-<# Get list of mailboxes and assign full access permissions to an account or a group. #>
-$grant_to = "admins@domain.com";
+    [Parameter(Mandatory = $false)]
+    [string]$DelegateUser = "admins@domain.com",
 
-$mbox = Get-Mailbox -ResultSize Unlimited;
-#$mbox = Get-Mailbox -ResultSize Unlimited | Where {$_.RecipientTypeDetails -eq "UserMailbox"};
-#$mbox = Get-Mailbox -ResultSize Unlimited | Where {$_.RecipientTypeDetails -eq "SharedMailbox"};
-#$mbox = Get-Mailbox -ResultSize Unlimited | Where {$_.RecipientTypeDetails -eq "EquipmentMailbox"};
-#$mbox = Get-Mailbox -ResultSize Unlimited | Where {$_.RecipientTypeDetails -eq "RoomMailbox"};
+    [Parameter(Mandatory = $false)]
+    [string]$AccessRights = "FullAccess",
 
-Foreach ($m in $mbox) {
-	Write-Host -NoNewline "Trying to grant Full Access permissions on ";
-		Write-Host -NoNewline -Fore Yellow $m.PrimarySmtpAddress;
-		Write-Host -NoNewline " to ";
-		Write-Host -NoNewline -Fore Yellow $grant_to;
-		Write-Host -NoNewline ".";
-	#Remove-MailboxPermission -Identity $m.PrimarySmtpAddress -User $grant_to -AccessRights FullAccess -InheritanceType All -Confirm:$false -ErrorAction Continue;
-	Add-MailboxPermission -Identity $m.PrimarySmtpAddress -User $grant_to -AccessRights FullAccess -AutoMapping:$false -ErrorAction Continue;
-	}
+    [Parameter(Mandatory = $false)]
+    [bool]$AutoMapping = $false,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Revoke
+)
+
+# Connect to Exchange Online
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+Connect-ExchangeOnline
+
+if ($Revoke) {
+    Write-Host "Revoking $AccessRights on $MailboxIdentity for $DelegateUser..." -ForegroundColor Yellow
+    Remove-MailboxPermission -Identity $MailboxIdentity `
+                            -User $DelegateUser `
+                            -AccessRights $AccessRights `
+                            -InheritanceType All `
+                            -Confirm:$false
+    Write-Host "Permission revoked successfully." -ForegroundColor Green
+}
+else {
+    Write-Host "Granting $AccessRights on $MailboxIdentity to $DelegateUser (AutoMapping: $AutoMapping)..." -ForegroundColor Cyan
+    Add-MailboxPermission -Identity $MailboxIdentity `
+                          -User $DelegateUser `
+                          -AccessRights $AccessRights `
+                          -AutoMapping:$AutoMapping
+    Write-Host "Permission assigned successfully." -ForegroundColor Green
+}
+
+# Display current permissions on target mailbox
+Write-Host "`nCurrent Permissions on $($MailboxIdentity):" -ForegroundColor Cyan
+Get-MailboxPermission -Identity $MailboxIdentity |
+    Where-Object { -not $_.IsInherited -and $_.User -notmatch "^NT AUTHORITY" } |
+    Select-Object User, AccessRights, IsInherited |
+    Format-Table -AutoSize

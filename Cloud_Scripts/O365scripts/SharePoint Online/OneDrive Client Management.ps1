@@ -1,54 +1,59 @@
 <#
 .SYNOPSIS
+    Manages local OneDrive for Business client registry policies and configuration toggles.
+
+.DESCRIPTION
+    Configures client-side Windows registry settings for the OneDrive sync application (onedrive.exe).
+    Controls policies including disabling personal accounts sync, enforcing Files On-Demand,
+    suppressing post-setup tutorials, and managing silent account configuration.
+
+.PARAMETER Policy
+    Target policy setting: 'DisablePersonalSync', 'FilesOnDemandEnabled', 'DisableTutorial', 'DisableFileSyncNGSC', or 'Audit'.
+
+.PARAMETER Value
+    Integer DWORD value (1 to enable policy, 0 to disable). Defaults to 1.
+
 .NOTES
+    Requires administrative permissions to modify HKLM registry paths.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\OneDrive Client Management.ps1 -Policy "DisablePersonalSync" -Value 1
+    Blocks users from syncing personal consumer OneDrive accounts on the local workstation.
+
 .LINK
-https://docs.microsoft.com/en-us/onedrive/use-group-policy
-https://support.microsoft.com/en-us/office/onedrive-won-t-start-0c158fa6-0cd8-4373-98c8-9179e24f10f2
-https://support.microsoft.com/en-us/office/which-onedrive-app-19246eae-8a51-490a-8d97-a645c151f2ba
-https://docs.microsoft.com/en-us/onedrive/plan-onedrive-enterprise
-https://docs.microsoft.com/en-us/onedrive/deploy-on-windows
-https://docs.microsoft.com/en-us/windows/win32/sysinfo/registry-value-types
-https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-itemproperty?view=powershell-7
-https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/remove-itemproperty?view=powershell-7
+    https://learn.microsoft.com/onedrive/use-group-policy
+    https://learn.microsoft.com/onedrive/deploy-on-windows
 #>
 
-<# Common example registry paths. #>
-$reg_path = "";
-$reg_path = "HKCU:\";
-$reg_path = "HKCU:\Software\Microsoft\Office\16.0"
-$reg_path = "HKLM:\";
-$reg_path = "HKLM:\Software\Microsoft\Windows\OneDrive";
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("DisablePersonalSync", "FilesOnDemandEnabled", "DisableTutorial", "DisableFileSyncNGSC", "Audit")]
+    [string]$Policy = "Audit",
 
+    [Parameter(Mandatory = $false)]
+    [int]$Value = 1
+)
 
-<# Interactive: Registry type selection. #>
-$list_regtypes = "REG_BINARY", "REG_DWORD", "REG_DWORD_LITTLE_ENDIAN", "REG_DWORD_BIG_ENDIAN", "REG_EXPAND_SZ", "REG_LINK", "REG_MULTI_SZ", "REG_NONE", "REG_QWORD", "REG_QWORD_LITTLE_ENDIAN", "REG_SZ";
-$reg_type = $list_regtypes | Out-GridView -OutputMode Single;
+$regPath = "HKLM:\Software\Microsoft\Windows\OneDrive"
 
-<# Create or set registry key . #>
-$reg_type = "";
-$reg_path = "";
-$reg_name = "";
-$reg_value = "";
-New-ItemProperty -PropertyType $reg_type -Path $reg_path -Name $reg_name -Value $reg_value -Force;
+# Ensure target registry key exists
+if (-not (Test-Path -Path $regPath)) {
+    New-Item -Path $regPath -Force | Out-Null
+}
 
-<# Remove a registry entry. #>
-$reg_path = "";
-$reg_name = "";
-Remove-ItemProperty -Path $reg_path -Name $reg_name -Force;
+if ($Policy -ne "Audit") {
+    Write-Host "Configuring OneDrive client policy '$Policy' = $Value in $regPath..." -ForegroundColor Cyan
+    New-ItemProperty -Path $regPath -Name $Policy -Value $Value -PropertyType DWORD -Force | Out-Null
+    Write-Host "Policy updated successfully." -ForegroundColor Green
+}
 
-
-<# Prevent the usage of OneDrive for file storage. #>
-$reg_path = "HKLM:\Software\Microsoft\Windows\OneDrive";
-$reg_name = "DisableFileSyncNGSC";
-
-<# Prevent users from syncing personal OneDrive accounts. #>
-$reg_path = "HKLM:\Software\Microsoft\Windows\OneDrive";
-$reg_name = "DisablePersonalSync";
-
-<# Disable the tutorial that appears at the end of OneDrive Setup. #>
-$reg_path = "HKLM:\Software\Microsoft\Windows\OneDrive";
-$reg_name = "DisableTutorial";
-
-<# Use OneDrive Files On-Demand. #>
-$reg_path = "HKLM:\Software\Microsoft\Windows\OneDrive";
-$reg_name = "FilesOnDemandEnabled";
+# Display current configuration
+Write-Host "`n=== Current OneDrive Client Machine Policies ($regPath) ===" -ForegroundColor Yellow
+$props = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
+if ($props) {
+    $props | Select-Object -Property * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider | Format-List
+} else {
+    Write-Host "No policies currently configured." -ForegroundColor Gray
+}

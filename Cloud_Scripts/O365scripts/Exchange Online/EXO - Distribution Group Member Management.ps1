@@ -1,19 +1,61 @@
 <#
 .SYNOPSIS
-Distribution Group Member Management
+    Interactively adds selected users to one or multiple Exchange Online distribution groups.
+
+.DESCRIPTION
+    Presents an interactive GUI selection (Out-GridView) for administrators to pick target
+    distribution groups and user mailboxes, then systematically assigns the selected users
+    as members of each chosen distribution group.
+
 .NOTES
+    Requires ExchangeOnlineManagement module.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\EXO - Distribution Group Member Management.ps1
+    Opens Out-GridView pickers to select groups and users, then performs the membership additions.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/exchange/add-distributiongroupmember?view=exchange-ps
-https://support.microsoft.com/en-us/office/distribution-groups-e8ba58a8-fab2-4aaf-8aa1-2a304052d2de
+    https://learn.microsoft.com/powershell/module/exchange/add-distributiongroupmember
+    https://learn.microsoft.com/microsoft-365/admin/manage/create-distribution-lists
 #>
 
-<# Connect to EXO v2. #>w
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
+[CmdletBinding()]
+param ()
 
-<# Interactive selection of user(s) to be added onto one/multiple distribution groups. #>
-$ListDG = Get-DistributionGroup -RecipientTypeDetails "MailUniversalDistributionGroup" -ResultSize Unlimited | Out-GridView -PassThru;
-$ListUsers = Get-ExoMailbox -RecipientTypeDetails "UserMailbox" | Out-GridView -PassThru;
-ForEach ($dg in $ListDG) {$ListUsers | % {Add-DistributionGroupMember -Identity $dg.DistinguishedName -Member $_.DistinguishedName -ErrorAction SilentlyContinue;}}
+# Connect to Exchange Online
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+Connect-ExchangeOnline
+
+Write-Host "Select target Distribution Groups:" -ForegroundColor Cyan
+$ListDG = Get-DistributionGroup -RecipientTypeDetails MailUniversalDistributionGroup -ResultSize Unlimited |
+    Out-GridView -Title "Select one or more Distribution Groups (hold Ctrl)" -PassThru
+
+if (-not $ListDG) {
+    Write-Warning "No distribution groups selected. Exiting."
+    return
+}
+
+Write-Host "Select users to add as members:" -ForegroundColor Cyan
+$ListUsers = Get-EXOMailbox -RecipientTypeDetails UserMailbox -ResultSize Unlimited |
+    Out-GridView -Title "Select one or more Users to add (hold Ctrl)" -PassThru
+
+if (-not $ListUsers) {
+    Write-Warning "No users selected. Exiting."
+    return
+}
+
+# Add selected users to each chosen group
+foreach ($dg in $ListDG) {
+    Write-Host "`nAdding members to group: $($dg.DisplayName)" -ForegroundColor Yellow
+    foreach ($user in $ListUsers) {
+        try {
+            Add-DistributionGroupMember -Identity $dg.DistinguishedName -Member $user.DistinguishedName -ErrorAction Stop
+            Write-Host " + Added $($user.DisplayName) ($($user.PrimarySmtpAddress))" -ForegroundColor Green
+        } catch {
+            Write-Warning " Could not add $($user.DisplayName) to $($dg.DisplayName): $_"
+        }
+    }
+}
+
+Write-Host "`nDistribution group member assignment process completed." -ForegroundColor Green

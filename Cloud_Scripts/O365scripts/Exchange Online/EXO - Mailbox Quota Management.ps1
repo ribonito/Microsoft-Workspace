@@ -1,35 +1,78 @@
 <#
 .SYNOPSIS
-Mailbox Quota Management
-https://github.com/O365scripts/O365scripts/blob/master/Exchange%20Online/EXO%20-%20Mailbox%20Quota%20Management.ps1
+    Configures and reports on Exchange Online mailbox storage quotas.
+
+.DESCRIPTION
+    Sets custom storage limits for user and shared mailboxes (ProhibitSendReceiveQuota,
+    ProhibitSendQuota, IssueWarningQuota) up to the maximum supported limits (100GB for E3/E5
+    licensed mailboxes). Includes procedures to verify current quota utilization across the tenant.
+
+.PARAMETER UserPrincipalName
+    The target mailbox identity to configure.
+
+.PARAMETER QuotaSize
+    Preset quota size: '50GB' or '100GB'.
+
 .NOTES
+    Requires ExchangeOnlineManagement module.
+    Ensure appropriate licensing (e.g. Exchange Online Plan 2 for 100GB quotas).
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\EXO - Mailbox Quota Management.ps1 -UserPrincipalName "user@contoso.com" -QuotaSize "100GB"
+    Sets the mailbox quota for user@contoso.com to 100GB limits.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/exchange/mailboxes/set-mailbox?view=exchange-ps
-https://docs.microsoft.com/en-us/exchange/recipients/user-mailboxes/storage-quotas?view=exchserver-2019
-https://support.microsoft.com/en-us/help/2490230/how-to-set-exchange-online-mailbox-sizes-and-limits-in-the-office-365
+    https://learn.microsoft.com/powershell/module/exchange/set-mailbox
+    https://learn.microsoft.com/exchange/recipients/user-mailboxes/storage-quotas
 #>
 
-<# Connect to EXO v2. #>
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$UserPrincipalName,
 
-<# Set mailbox quota to 100GB on a single mailbox #>
-$User = "";
-$QuotaPsrq = "100GB";
-$QuotaPsq = "99.75GB";
-$QuotaIwq = "99.50GB";
-Set-Mailbox $mbox -ProhibitSendReceiveQuota $QuotaPsrq -ProhibitSendQuota $QuotaPsq -IssueWarningQuota $QuotaIwq;
-Get-Mailbox $mbox | Select PrimarySMTPAddress, ProhibitSendReceiveQuota, ProhibitSendQuota, IssueWarningQuota;
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("50GB", "100GB")]
+    [string]$QuotaSize = "100GB",
 
-<# Set mailbox quota to 50GB on a single mailbox #>
-$User = "";
-$QuotaPsrq = "50GB";
-$QuotaPsq = "49.75GB";
-$QuotaIwq = "49.50GB";
-Set-Mailbox $User -ProhibitSendReceiveQuota $QuotaPsrq -ProhibitSendQuota $QuotaPsq -IssueWarningQuota $QuotaIwq;
-Get-Mailbox $User | Select PrimarySMTPAddress, ProhibitSendReceiveQuota, ProhibitSendQuota, IssueWarningQuota;
+    [Parameter(Mandatory = $false)]
+    [switch]$AuditAll
+)
 
-<# Confirm quota of all users. #>
-Get-Mailbox | Select PrimarySMTPAddress, ProhibitSendReceiveQuota, ProhibitSendQuota, IssueWarningQuota;
+# Connect to Exchange Online
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+Connect-ExchangeOnline
+
+if (-not [string]::IsNullOrWhiteSpace($UserPrincipalName)) {
+    if ($QuotaSize -eq "100GB") {
+        $QuotaPsrq = "100GB"
+        $QuotaPsq  = "99.75GB"
+        $QuotaIwq  = "99.50GB"
+    } else {
+        $QuotaPsrq = "50GB"
+        $QuotaPsq  = "49.75GB"
+        $QuotaIwq  = "49.50GB"
+    }
+
+    Write-Host "Setting $QuotaSize storage quota on mailbox '$UserPrincipalName'..." -ForegroundColor Cyan
+    Set-Mailbox -Identity $UserPrincipalName `
+                -ProhibitSendReceiveQuota $QuotaPsrq `
+                -ProhibitSendQuota $QuotaPsq `
+                -IssueWarningQuota $QuotaIwq `
+                -UseDatabaseQuotaDefaults $false
+
+    Write-Host "`nUpdated Quotas for $($UserPrincipalName):" -ForegroundColor Green
+    Get-Mailbox -Identity $UserPrincipalName |
+        Select-Object PrimarySmtpAddress, ProhibitSendReceiveQuota, ProhibitSendQuota, IssueWarningQuota |
+        Format-Table -AutoSize
+}
+elseif ($AuditAll) {
+    Write-Host "Auditing mailbox quotas for all mailboxes..." -ForegroundColor Cyan
+    Get-EXOMailbox -ResultSize Unlimited -Properties ProhibitSendReceiveQuota, ProhibitSendQuota, IssueWarningQuota |
+        Select-Object PrimarySmtpAddress, ProhibitSendReceiveQuota, ProhibitSendQuota, IssueWarningQuota |
+        Format-Table -AutoSize
+}
+else {
+    Write-Host "Usage: Specify -UserPrincipalName <UPN> to adjust a mailbox or -AuditAll to list all mailboxes." -ForegroundColor Yellow
+}
