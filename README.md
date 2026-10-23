@@ -1,6 +1,17 @@
 # Microsoft Workspace – Advanced M365 Administration
 
-Centralized repository of PowerShell scripts, templates, and documentation for advanced administrators of **Microsoft 365**, **Entra ID**, **Exchange Online**, **Teams**, **SharePoint**, **Intune**, and hybrid environments.
+**Microsoft Workspace** is a centralized, modular PowerShell repository designed to simplify and standardize the administration of Microsoft 365, hybrid and on-premises environments.
+
+It provides reusable scripts, templates, documentation and reporting tools for:
+
+- **Identity and access:** Microsoft Entra ID, Conditional Access, devices and directory operations
+- **Messaging and security:** Exchange Online, mail flow, Defender for Office 365 and compliance
+- **Modern endpoint management:** Microsoft Intune, Autopilot and Win32 application deployment
+- **Collaboration:** Microsoft Teams, SharePoint Online and PnP-based automation
+- **Cloud and hybrid operations:** Azure resources, Microsoft Graph, Exchange Server and local endpoints
+- **Governance and assessment:** licensing, security, configuration reviews and cross-service reporting
+
+The repository is organized by workload and includes a complete script catalog in [`SCRIPT_INDEX.md`](SCRIPT_INDEX.md), standardized naming conventions, reusable connection utilities and security guidance for certificate-based authentication.
 
 ---
 
