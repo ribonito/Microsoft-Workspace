@@ -1,39 +1,61 @@
 <#
+.SYNOPSIS
+    Audits subscribed Microsoft 365 licensing SKUs and included service plans via Microsoft Graph.
+
+.DESCRIPTION
+    Connects to Microsoft Graph using the Microsoft.Graph.Identity.Partner module, queries all
+    subscribed licensing SKUs (SubscribedSku) in the tenant, maps individual service plans (ServicePlans),
+    and exports an inventory of SKU part numbers, plan IDs, and friendly display names to CSV.
+
+.PARAMETER ExportPath
+    Destination file path for the licensing CSV report. Defaults to user desktop.
+
+.NOTES
+    Requires Microsoft.Graph PowerShell module with Organization.Read.All scope.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\MS Graph - Licensing Overview.ps1
+    Queries Microsoft Graph for tenant SKUs and displays service plan mapping.
+
+.LINK
+    https://learn.microsoft.com/powershell/microsoftgraph/overview
+    https://learn.microsoft.com/graph/api/subscribedsku-list
 #>
 
-Connect-MgGprah;
-Select-MgProfile beta;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$ExportPath = "$env:USERPROFILE\Desktop\M365LicensingOverview_$((Get-Date -Format 'yyyyMMdd_HHmmss')).csv"
+)
 
+# Connect to Microsoft Graph
+Import-Module Microsoft.Graph.Identity.Partner -ErrorAction SilentlyContinue
+Connect-MgGraph -Scopes "Organization.Read.All" -NoWelcome
 
+Write-Host "Querying Subscribed SKUs via Microsoft Graph..." -ForegroundColor Cyan
 
+$ListSkus = Get-MgSubscribedSku -All -ErrorAction Stop
+$ReportPlans = [System.Collections.Generic.List[PSCustomObject]]::new()
 
-<# Pass through each SKU to list the service plans. #>
-[Array]$ListSkus = Get-MgSubscribedSku;
-$ReportPlans = [System.Collections.Generic.List[Object]]::new();
-ForEach ($Sku in $ListSkus) {
-#	Write-Host "Current SKU:" -NoNewline; $SP.SkuPartNumber | fl;
-	ForEach ($Plan in $Sku.ServicePlans) {
-		Write-Host "Current Plan:" -NoNewline; $Plan | fl
-		$ReportLine = [PSCustomObject][Ordered]@{
-			ServicePlanId = $Plan.ServicePlanId
-			ServicePlanName = $Plan.ServicePlanName
-			DisplayName = $Plan.ServicePlanName	
-			};
-		$ReportPlans.Add($ReportLine);
-		}
-	}
-$ReportPlans | Sort ServicePlanId -Unique | Sort ServicePlanName;
+foreach ($sku in $ListSkus) {
+    Write-Host "Auditing SKU: $($sku.SkuPartNumber) (Prepaid Units: $($sku.PrepaidUnits.Enabled))" -ForegroundColor Yellow
 
-<# Subscription output. #>
-$ListSkus;
-$ListSkus | Select -First 1 *;
-$ListSkus | Select SkuPartNumber, SkuId | Out-GridView;
-$ListSkus | Export-Csv -NoTypeInformation "$env:USERPROFILE\Desktop\M365LicensingOverview.csv";
+    foreach ($plan in $sku.ServicePlans) {
+        $ReportPlans.Add([PSCustomObject]@{
+            SkuPartNumber      = $sku.SkuPartNumber
+            SkuId              = $sku.SkuId
+            ServicePlanName    = $plan.ServicePlanName
+            ServicePlanId      = $plan.ServicePlanId
+            ProvisioningStatus = $plan.ProvisioningStatus
+        })
+    }
+}
 
-<# Service plan output. #>
-$ReportPlans | Sort ServicePlanId | Format-Table -AutoSize;
-$ReportPlans | Sort ServicePlanId -Unique | Sort ServicePlanName;
-#$SPData | Sort ServicePlanId -Unique | Export-Csv -NoTypeInformation "$env:USERPROFILE\Desktop\M365LicensingOverview.csv";
+Write-Host "`n=== Licensing SKU & Service Plan Summary ===" -ForegroundColor Green
+$ReportPlans | Select-Object -Unique SkuPartNumber, ServicePlanName | Format-Table -AutoSize
 
-
-$X = $ReportPlans | Out-GridView -PassThru;
+if (-not [string]::IsNullOrWhiteSpace($ExportPath)) {
+    $ReportPlans | Export-Csv -Path $ExportPath -NoTypeInformation -Encoding utf8
+    Write-Host "Licensing report successfully exported to: $ExportPath" -ForegroundColor Green
+}

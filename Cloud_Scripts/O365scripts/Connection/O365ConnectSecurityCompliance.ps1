@@ -1,26 +1,49 @@
 <#
 .SYNOPSIS
-Connect to Security & Compliance PowerShell.
-https://github.com/O365scripts/O365scripts/blob/master/Connection/O365ConnectSecurityCompliance.ps1
+    Connects to Microsoft Purview / Security & Compliance Center PowerShell.
+
+.DESCRIPTION
+    Establishes an administrative session to the Security & Compliance Center via Connect-IPPSSession
+    in the ExchangeOnlineManagement module. Supports both interactive modern authentication (MFA)
+    and credential-based sessions.
+
+.PARAMETER AdminUpn
+    The UserPrincipalName of the administrator account.
 
 .NOTES
+    Requires ExchangeOnlineManagement module (v2 or v3).
+    Do not connect to Exchange Online and Security & Compliance within the same runspace concurrently.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\O365ConnectSecurityCompliance.ps1 -AdminUpn "secadmin@contoso.com"
+    Establishes a modern authentication session to Security & Compliance Center.
 
 .LINK
-Reference:
-https://learn.microsoft.com/en-us/powershell/module/exchange/connect-ippssession
+    https://learn.microsoft.com/powershell/exchange/connect-to-scc-powershell
+    https://learn.microsoft.com/powershell/module/exchange/connect-ippssession
 #>
 
-# Connect to Security & Compliance.
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false
-Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false
-#Update-Module ExchangeOnlineManagement -Force -Confirm:$false
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$AdminUpn
+)
+
+# Ensure ExchangeOnlineManagement module is available
+if (-not (Get-Module -ListAvailable -Name ExchangeOnlineManagement)) {
+    Write-Host "Installing ExchangeOnlineManagement module..." -ForegroundColor Yellow
+    Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false -Scope CurrentUser
+}
+
 Import-Module ExchangeOnlineManagement
-$AdminUpn = ""
-Connect-IPPSSession -UserPrincipalName $AdminUpn
 
-# Connect to Security & Compliance without MFA. #>
-$AdminUpn = ""; $Creds = Get-Credential -UserName $AdminUpn -Message "Login"
-Connect-IPPSSession -UserPrincipalName $AdminUpn -Credential $Creds
+Write-Host "Connecting to Microsoft Purview / Security & Compliance Center..." -ForegroundColor Cyan
 
-# Connect to Security & Compliance without MFA and without caching credentials.
-Connect-IPPSSession -UserPrincipalName $AdminUpn -Credential (Get-Credential -UserName $AdminUpn -Message "Login")
+if (-not [string]::IsNullOrWhiteSpace($AdminUpn)) {
+    Connect-IPPSSession -UserPrincipalName $AdminUpn -ShowBanner:$false
+} else {
+    Connect-IPPSSession -ShowBanner:$false
+}
+
+Write-Host "Successfully connected to Security & Compliance Center session." -ForegroundColor Green

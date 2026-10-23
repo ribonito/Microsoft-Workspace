@@ -1,37 +1,81 @@
 <#
 .SYNOPSIS
-Office Apps Activation and Version Update Management
-https://github.com/O365scripts/O365scripts/blob/master/Office%20Apps/Office%20Apps%20Management.ps1
+    Manages local Microsoft 365 Apps Click-to-Run activations and build version updates.
+
+.DESCRIPTION
+    Inspects installed Office Click-to-Run / Volume licensing activation status using the Office
+    Software Protection Platform script (ospp.vbs). Supports removing stale product keys and
+    triggering online Click-to-Run client updates or rollbacks to a specific target build version.
+
+.PARAMETER TargetVersion
+    Optional specific Office build version to update or downgrade to (e.g., '16.0.17830.20138').
+
+.PARAMETER RemovePartialKey
+    Optional 5-character partial product key to remove from the local machine licensing store.
+
 .NOTES
+    Must be executed with local Administrator privileges on Windows.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\Office Apps Management.ps1
+    Queries and displays local Office activation license status.
+
+.EXAMPLE
+    .\Office Apps Management.ps1 -TargetVersion "16.0.17830.20138"
+    Triggers Office Click-to-Run update to the specified build number.
+
 .LINK
-https://docs.microsoft.com/en-us/officeupdates/update-history-microsoft365-apps-by-date
-https://docs.microsoft.com/en-us/deployoffice/overview-licensing-activation-microsoft-365-apps
-https://docs.microsoft.com/en-us/office/troubleshoot/office-suite-issues/office-click-to-run-installation
-https://support.microsoft.com/en-us/office/office-installed-with-click-to-run-and-windows-installer-on-same-computer-isn-t-supported-30775ef4-fa77-4f47-98fb-c5826a6926cd
-https://support.microsoft.com/en-us/office/activate-office-5bd38f38-db92-448b-a982-ad170b1e187e
+    https://learn.microsoft.com/deployoffice/overview-licensing-activation-microsoft-365-apps
+    https://learn.microsoft.com/officeupdates/update-history-microsoft365-apps-by-date
 #>
 
-<# Select which folder to run the OSPP vbs script to run from. #>
-$ListPathOspp = @{
-	"Office 2016 (x64 or x86)" = "$env:ProgramFiles\Microsoft Office\Office16\ospp.vbs";
-	"Office 2016 (x86/64)" = "${env:ProgramFiles(x86)}\Microsoft Office\Office16\ospp.vbs";
-	"Office 2013 (x64 or x86)" = "$env:ProgramFiles\Microsoft Office\Office15\ospp.vbs";
-	"Office 2013 (x86/64)" = "${env:ProgramFiles(x86)}\Microsoft Office\Office15\ospp.vbs";
-	"Office 2010 (x64 or x86)" = "$env:ProgramFiles\Microsoft Office\Office14\ospp.vbs";
-	"Office 2010 (x86/64)" = "${env:ProgramFiles(x86)}\Microsoft Office\Office14\ospp.vbs";
-	"Office 2007 (x86)" = "$env:ProgramFiles\Microsoft Office\Office13\ospp.vbs";
-	"Office 2007 (x86/64)" = "${env:ProgramFiles(x86)}\Microsoft Office\Office13\ospp.vbs";
-};
-$PathOspp = $ListPathOspp | Out-GridView -OutputMode Single;
-if (!(Get-Item $PathOspp.Value -ErrorAction SilentlyContinue)) {
-	Write-Host -NoNewline "Unable to find the OSPP script in: "; Write-Host -Fore Yellow $PathOspp.Value;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$TargetVersion,
+
+    [Parameter(Mandatory = $false)]
+    [string]$RemovePartialKey
+)
+
+# 1. Locate ospp.vbs script across standard installation architectures
+$CandidatePaths = @(
+    "$env:ProgramFiles\Microsoft Office\Office16\ospp.vbs",
+    "${env:ProgramFiles(x86)}\Microsoft Office\Office16\ospp.vbs",
+    "$env:ProgramFiles\Microsoft Office\Office15\ospp.vbs",
+    "${env:ProgramFiles(x86)}\Microsoft Office\Office15\ospp.vbs"
+)
+
+$OsppPath = $null
+foreach ($path in $CandidatePaths) {
+    if (Test-Path -Path $path) {
+        $OsppPath = $path
+        break
+    }
 }
-<# Get the list of current Office activation keys. #>
-& "$env:windir\System32\cscript.exe" $PathOspp /dstatus;
-<#  Adjust the XXXXX with the activation key you want to remove and run once per key. #>
-& "$env:windir\System32\cscript.exe" $PathOspp /unpkey XXXXX;
 
+if ($OsppPath) {
+    Write-Host "Located OSPP script at: $OsppPath" -ForegroundColor Cyan
 
-<# Update or downgrade Office Apps to a specific version. #>
-$Version = "16.0.13801.20360";
-Start-Process "$env:ProgramFiles\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" -ArgumentList "/Update user UpdateVersion=$Version";
+    # Remove partial key if requested
+    if (-not [string]::IsNullOrWhiteSpace($RemovePartialKey)) {
+        Write-Host "Removing partial product key '$RemovePartialKey'..." -ForegroundColor Yellow
+        & "$env:windir\System32\cscript.exe" //nologo $OsppPath /unpkey $RemovePartialKey
+    }
+
+    # Query current license status
+    Write-Host "`n=== Office License Status ===" -ForegroundColor Green
+    & "$env:windir\System32\cscript.exe" //nologo $OsppPath /dstatus
+}
+else {
+    Write-Warning "Could not locate ospp.vbs. Verify Microsoft Office is installed on this system."
+}
+
+# 2. Trigger Click-to-Run update or rollback if version specified
+$c2rClient = "$env:ProgramFiles\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe"
+if (-not [string]::IsNullOrWhiteSpace($TargetVersion) -and (Test-Path -Path $c2rClient)) {
+    Write-Host "`nInitiating Office Click-to-Run update to version $TargetVersion..." -ForegroundColor Cyan
+    Start-Process -FilePath $c2rClient -ArgumentList "/Update user UpdateVersion=$TargetVersion"
+    Write-Host "Office update process launched." -ForegroundColor Green
+}

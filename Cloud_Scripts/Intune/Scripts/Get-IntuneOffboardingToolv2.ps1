@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+    Graphical WPF administrative tool for offboarding devices from Microsoft Intune, Autopilot, and Entra ID.
+
+.DESCRIPTION
+    Provides a standalone WPF graphical user interface to search for Windows and mobile devices,
+    verify enrollment status in Microsoft Intune, Windows Autopilot, and Entra ID (Azure AD),
+    and execute offboarding operations (device retirement, deletion, Autopilot record removal).
+    Supports bulk device import, permission checking, stale device exports, and detailed action logging.
+
+.NOTES
+    Requires Microsoft.Graph modules and Windows Presentation Framework (WPF).
+    Must be executed in Windows PowerShell 5.1 or PowerShell 7 with Windows desktop runtime.
+    Author: Josep Canas - M365 Solutions Architect
+
+.LINK
+    https://learn.microsoft.com/mem/intune/remote-actions/devices-wipe
+    https://learn.microsoft.com/autopilot/deregister-device
+#>
+
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 

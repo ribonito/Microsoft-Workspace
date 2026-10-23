@@ -1,32 +1,74 @@
+<#
+.SYNOPSIS
+    Invokes an external binary executable with structured process management and error handling.
+
+.DESCRIPTION
+    Launches an external executable process using System.Diagnostics.ProcessStartInfo.
+    Supports argument passing, stream redirection (stdout/stderr), window creation flags,
+    and returns a structured PSCustomObject containing the process exit code.
+
+.PARAMETER FilePath
+    The absolute path or executable name to invoke.
+
+.PARAMETER Arguments
+    Command-line arguments to pass to the process.
+
+.PARAMETER RedirectStandardOutput
+    Whether to redirect standard output. Defaults to true.
+
+.PARAMETER RedirectStandardError
+    Whether to redirect standard error. Defaults to true.
+
+.PARAMETER CreateNoWindow
+    Whether to launch the process hidden without creating a visible window. Defaults to true.
+
+.PARAMETER UseShellExecute
+    Whether to use operating system shell execute. Defaults to false.
+
+.OUTPUTS
+    [PSCustomObject]
+    Object containing the process ExitCode.
+
+.NOTES
+    Module: SRIntuneConfigManagement
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    Invoke-Executable -FilePath "cmd.exe" -Arguments "/c echo Hello"
+    Runs cmd.exe silently and returns exit code 0.
+#>
 function Invoke-Executable {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param(
-        [parameter(Mandatory = $true, HelpMessage = "Specify the file name or path of the executable to be invoked, including the extension.")]
+        [Parameter(Mandatory = $true, HelpMessage = "Specify the file name or path of the executable to be invoked, including the extension.")]
         [ValidateNotNullOrEmpty()]
         [string]$FilePath,
 
-        [parameter(Mandatory = $false, HelpMessage = "Specify arguments that will be passed to the executable.")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify arguments that will be passed to the executable.")]
         [ValidateNotNull()]
         [string]$Arguments,
 
-        [parameter(Mandatory = $false, HelpMessage = "Specify whether standard output should be redirected.")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify whether standard output should be redirected.")]
         [ValidateNotNull()]
         [bool]$RedirectStandardOutput = $true,
 
-        [parameter(Mandatory = $false, HelpMessage = "Specify whether standard error output should be redirected.")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify whether standard error output should be redirected.")]
         [ValidateNotNull()]
         [bool]$RedirectStandardError = $true,
 
-        [parameter(Mandatory = $false, HelpMessage = "Specify whether to create a new window for the executable.")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify whether to create a new window for the executable.")]
         [ValidateNotNull()]
         [bool]$CreateNoWindow = $true,
 
-        [parameter(Mandatory = $false, HelpMessage = "Specify whether to create a new window for the executable.")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify whether to create a new window for the executable.")]
         [ValidateNotNull()]
         [bool]$UseShellExecute = $false
     )
+
     try {
         # Create the Process Info object which contains details about the process
-        $ProcessStartInfoObject = New-object -TypeName "System.Diagnostics.ProcessStartInfo"
+        $ProcessStartInfoObject = New-Object -TypeName "System.Diagnostics.ProcessStartInfo"
         $ProcessStartInfoObject.FileName = $FilePath
         $ProcessStartInfoObject.CreateNoWindow = $CreateNoWindow
         $ProcessStartInfoObject.UseShellExecute = $UseShellExecute
@@ -34,7 +76,7 @@ function Invoke-Executable {
         $ProcessStartInfoObject.RedirectStandardError = $RedirectStandardError 
         
         # Add the arguments to the process info object
-        if ($Arguments.Count -gt 0) {
+        if (-not [string]::IsNullOrWhiteSpace($Arguments)) {
             $ProcessStartInfoObject.Arguments = $Arguments
         }
 

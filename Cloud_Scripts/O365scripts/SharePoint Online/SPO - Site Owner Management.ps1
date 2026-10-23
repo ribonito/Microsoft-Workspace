@@ -44,7 +44,7 @@ if (-not [string]::IsNullOrWhiteSpace($SiteUrl) -and -not [string]::IsNullOrWhit
         Set-SPOUser -Site $SiteUrl -LoginName $AdminUser -IsSiteCollectionAdmin $true -ErrorAction Stop
         Write-Host "Site Collection Administrator privileges successfully granted." -ForegroundColor Green
     } catch {
-        Write-Error "Failed to grant Site Collection Admin on $SiteUrl: $_"
+        Write-Error "Failed to grant Site Collection Admin on $($SiteUrl): $_"
     }
 }
 else {

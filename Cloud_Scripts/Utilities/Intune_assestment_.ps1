@@ -1,4 +1,31 @@
 
+<#
+.SYNOPSIS
+    Full tenant Microsoft Intune configuration backup and JSON assessment export.
+
+.DESCRIPTION
+    Connects to Microsoft Graph using required DeviceManagement and Directory read scopes
+    and comprehensively exports all tenant Intune configurations to JSON files:
+    Configuration Policies, Compliance Policies, Endpoint Security, Scripts, Remediations,
+    Autopilot profiles, Client Apps, App Protection Policies, and Scope Tags.
+
+.PARAMETER ExportPath
+    Destination root directory where exported JSON configuration folders will be created.
+    Defaults to C:\Temp\IntuneFullExport.
+
+.NOTES
+    Requires Microsoft.Graph (Beta) PowerShell module with administrative scopes.
+    Author: Josep Canas - M365 Solutions Architect
+
+.EXAMPLE
+    .\Intune_assestment_.ps1
+    Connects to Microsoft Graph and exports full Intune configuration to C:\Temp\IntuneFullExport.
+
+.LINK
+    https://learn.microsoft.com/mem/intune/fundamentals/what-is-intune
+    https://learn.microsoft.com/graph/api/resources/intune-graph-overview
+#>
+
 # =====================================================================
 # INTUNE FULL TENANT JSON EXPORT
 # =====================================================================
