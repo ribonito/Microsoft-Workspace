@@ -1,40 +1,61 @@
 <#
 .SYNOPSIS
-Connect to different M365 services using an admin without multi-factor authentication enabled.
+    Connects to Microsoft 365 services using credential-based authentication without MFA.
+
+.DESCRIPTION
+    Automates credential-based authentication across legacy and modern M365 management modules
+    (MSOnline, AzureAD, Exchange Online, Skype for Business / Teams, SharePoint Online, and PnP).
+    Intended strictly for service accounts or automated lab environments where MFA cannot be used.
+
 .NOTES
-	> Please note that is highly recommended for admins to have MFA enabled for security measures.
-	> Refer to the following page if you need to install modules before connecting: <url>
-	> Note that is not possible to connect to EXO v2 and Security & Compliance at the same time since connecting to one will simply disconnect the other.
+    Security Notice: Microsoft strongly recommends enforcing Multi-Factor Authentication (MFA)
+    for all administrative accounts. Basic authentication is largely deprecated across Microsoft 365.
+    Ensure passwords and credentials are securely handled and never hardcoded in scripts.
+
+.EXAMPLE
+    .\Connect-M365NoMFA.ps1
+    Prompts for credentials once and connects to the enabled Microsoft 365 modules.
+
 .LINK
+    https://learn.microsoft.com/microsoft-365/enterprise/connect-to-all-office-365-services-in-a-single-windows-powershell-window
+    https://learn.microsoft.com/security/compass/incident-response-playbook-compromised-credentials
 #>
 
-<# Connection options. #>
-$AdminUpn = "admin@domain.com";
-$Tenant = "contoso";
-$Creds = Get-Credential -Message "Login" -UserName $AdminUpn;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false, HelpMessage = "Administrative User Principal Name.")]
+    [string]$AdminUpn = "admin@domain.com",
 
-<# Connect to MSOL. #>
-Import-Module MSOnline;
-Connect-MsolService -Credential $Creds;
+    [Parameter(Mandatory = $false, HelpMessage = "Tenant name prefix (e.g., contoso for contoso.onmicrosoft.com).")]
+    [string]$Tenant = "contoso"
+)
 
-<# Connect to AAD. #>
-Import-Module AzureAD;
-Connect-AzureAD -AccountId $AdminUpn -Credential $Creds;
+# Prompt for credentials once to reuse across sessions
+$Creds = Get-Credential -Message "Enter credentials for $AdminUpn" -UserName $AdminUpn
 
-<# Connect to EXO or S&C. #>
-Import-Module ExchangeOnlineManagement;
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn -Credential $Creds;
-#Connect-IPPSSession -UserPrincipalName $AdminUpn -Credential $Creds;
+# 1. Connect to MSOnline (Entra ID v1)
+Write-Host "Connecting to MSOnline..." -ForegroundColor Cyan
+Import-Module MSOnline -ErrorAction SilentlyContinue
+Connect-MsolService -Credential $Creds
 
-<# Connect to SFB. #>
-Import-Module MicrosoftTeams -RequiredVersion 1.1.6;
-$Session_Sfb = New-CsOnlineSession -Credentials $Creds;
-Import-PSSession $Session_Sfb;
+# 2. Connect to Azure Active Directory (Entra ID v2)
+Write-Host "Connecting to AzureAD..." -ForegroundColor Cyan
+Import-Module AzureAD -ErrorAction SilentlyContinue
+Connect-AzureAD -AccountId $AdminUpn -Credential $Creds
 
-<# Connect to SPO. #>
-Import-Module Microsoft.Online.SharePoint.PowerShell;
-Connect-SPOService -Url "https://$Tenant-admin.sharepoint.com" -Credential $Creds;
+# 3. Connect to Exchange Online
+Write-Host "Connecting to Exchange Online..." -ForegroundColor Cyan
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+Connect-ExchangeOnline -UserPrincipalName $AdminUpn -Credential $Creds -ShowBanner:$false
 
-<# Connect to SPO PnP. #>
-Import-Module PnP.PowerShell;
-Connect-PnPOnline -Url "https://${Tenant}-my.sharepoint.com" -Interactive;
+# 4. Connect to SharePoint Online Admin Center
+Write-Host "Connecting to SharePoint Online..." -ForegroundColor Cyan
+Import-Module Microsoft.Online.SharePoint.PowerShell -ErrorAction SilentlyContinue
+Connect-SPOService -Url "https://${Tenant}-admin.sharepoint.com" -Credential $Creds
+
+# 5. Connect to SharePoint Online via PnP PowerShell
+Write-Host "Connecting to PnP PowerShell..." -ForegroundColor Cyan
+Import-Module PnP.PowerShell -ErrorAction SilentlyContinue
+Connect-PnPOnline -Url "https://${Tenant}-admin.sharepoint.com" -Credentials $Creds
+
+Write-Host "Non-MFA connection sequence completed." -ForegroundColor Green

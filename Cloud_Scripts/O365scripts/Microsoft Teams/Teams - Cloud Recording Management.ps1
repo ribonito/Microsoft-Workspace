@@ -1,32 +1,46 @@
 <#
 .SYNOPSIS
-Teams Cloud Recording Management
-https://github.com/O365scripts/O365scripts/blob/master/Microsoft%20Teams/Teams%20-%20Cloud%20Recording%20Management.ps1
+    Manages Microsoft Teams meeting cloud recording policies and storage locations.
+
+.DESCRIPTION
+    Configures and reviews Teams meeting recording policies across the tenant. Allows administrators
+    to specify recording storage targets (OneDrive for Business / SharePoint vs legacy Stream),
+    manage recording permissions, and control geographic storage policy settings.
+
 .NOTES
+    Requires MicrosoftTeams PowerShell module (v2+).
+    Author: Josep Canas - M365 Solutions Architect
+    Product: Microsoft Teams Administration
+
+.EXAMPLE
+    .\Teams - Cloud Recording Management.ps1
+    Applies cloud recording policies to the Global meeting policy and verifies configuration.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/skype/set-csteamsmeetingpolicy?view=skype-ps
-https://docs.microsoft.com/en-us/microsoftteams/tmr-meeting-recording-change
-https://docs.microsoft.com/en-us/microsoftteams/cloud-recording
-https://aka.ms/in-region
+    https://learn.microsoft.com/powershell/module/skype/set-csteamsmeetingpolicy
+    https://learn.microsoft.com/microsoftteams/cloud-recording
 #>
 
-<# Connect to Teams. #>
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module MicrosoftTeams -AllowClobber -Force -Confirm:$false;
-Import-Module MicrosoftTeams;
-Connect-MicrosoftTeams;
+[CmdletBinding()]
+param ()
 
-<# Use OneDrive for Business and SharePoint or Stream for meeting recordings. #>
-Set-CsTeamsMeetingPolicy -Identity "Global" -RecordingStorageMode "OneDriveForBusiness";
+# Step 1: Connect to Microsoft Teams
+Import-Module MicrosoftTeams -ErrorAction SilentlyContinue
+Connect-MicrosoftTeams
 
-<# Opt out of OneDrive for Business and SharePoint to continue using Stream. #>
-Set-CsTeamsMeetingPolicy -Identity "Global" -RecordingStorageMode "Stream";
+# Step 2: Configure Global Meeting Policy for modern OneDrive/SharePoint storage
+Write-Host "Configuring Teams cloud recording storage to OneDrive for Business / SharePoint..." -ForegroundColor Cyan
+Set-CsTeamsMeetingPolicy -Identity "Global" -RecordingStorageMode "OneDriveForBusiness" -AllowCloudRecording $true
 
-<# Allow storing recording outside of region. Note that all meeting recordings will be permanently stored in another region, and can't be migrated. #>
-Set-CsTeamsMeetingPolicy -Identity "Global" -AllowCloudRecording $true -AllowRecordingStorageOutsideRegion $true;
+# Step 3: Optional configuration - Allow cross-region recording storage (if permitted by governance)
+# Set-CsTeamsMeetingPolicy -Identity "Global" -AllowRecordingStorageOutsideRegion $true
 
-<# Confirm global meeting policy configuration. #>
-Get-CsTeamsMeetingPolicy -Identity "Global";
+# Step 4: Validate Global policy configuration
+Write-Host "`n=== Global Meeting Policy Cloud Recording Settings ===" -ForegroundColor Green
+Get-CsTeamsMeetingPolicy -Identity "Global" |
+    Select-Object Identity, AllowCloudRecording, RecordingStorageMode, AllowRecordingStorageOutsideRegion |
+    Format-List
 
-<# Confirm all meeting policies. #>
-Get-CsTeamsMeetingPolicy | Format-List;
+# Step 5: Enumerate all meeting policies in tenant
+Write-Host "`nAll Teams Meeting Policies in Tenant:" -ForegroundColor Cyan
+Get-CsTeamsMeetingPolicy | Format-Table Identity, AllowCloudRecording, RecordingStorageMode -AutoSize

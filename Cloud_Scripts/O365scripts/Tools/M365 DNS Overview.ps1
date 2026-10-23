@@ -1,64 +1,88 @@
 <#
 .SYNOPSIS
-M365 DNS Overview
+    Interactive DNS diagnostic tool for validating Microsoft 365 domain records.
+
+.DESCRIPTION
+    Prompts for a custom domain name and tests for all expected Microsoft 365 DNS records,
+    including MX, SPF/TXT, Autodiscover, DKIM selectors, Microsoft Teams / Skype for Business
+    CNAME and SRV records, and Intune MDM enrollment endpoints.
+
 .NOTES
+    Requires the built-in DnsClient PowerShell module.
+    Ensure internet connectivity to standard public DNS resolvers.
+
+.EXAMPLE
+    .\M365 DNS Overview.ps1
+    Launches the interactive DNS assessment console for Microsoft 365 domains.
+
 .LINK
-https://docs.microsoft.com/en-us/microsoft-365/admin/get-help-with-domains/create-dns-records-at-any-dns-hosting-provider?view=o365-worldwide
-https://docs.microsoft.com/en-us/microsoft-365/security/office-365-security/use-dkim-to-validate-outbound-email?view=o365-worldwide#SetUpDKIMO365
-https://docs.microsoft.com/office365/admin/setup/domains-faq
-https://docs.microsoft.com/en-us/microsoft-365/admin/get-help-with-domains/get-help-with-domains?view=o365-worldwide
-https://docs.microsoft.com/en-us/microsoft-365/admin/setup/domains-faq?view=o365-worldwide#why-do-i-have-an-onmicrosoftcom-domain
-https://docs.microsoft.com/en-us/microsoftteams/prepare-network
+    https://learn.microsoft.com/microsoft-365/admin/get-help-with-domains/create-dns-records-at-any-dns-hosting-provider
+    https://learn.microsoft.com/microsoft-365/security/office-365-security/email-authentication-dkim-configure
 #>
 
-<# Interactive M365 DNS lookup start. #>
-$m365_gcc   = 0;
-$m365_exo   = 1;
-$m365_teams = 1;
-$m365_mdm   = 1;
+[CmdletBinding()]
+param ()
 
-<# Interactive M365 DNS lookup v0.4 #>
+# Feature toggle flags
+$CheckExo   = 1
+$CheckTeams = 1
+$CheckMdm   = 1
+
 do {
-Clear
-Write-Host -Fore Red "M365 DNS OVERVIEW";
-$domain = Read-Host -Prompt "Enter domain";
-if (!$domain) {exit;}
-else
-    {
-    if ($m365_exo) {
-        <# MX, CNAME, TXT #>
-        $dns_mx = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "MX" -Name $Domain | sort Preference).ForEach({"$($_.NameExchange) [$($_.Preference)]"}) | Out-String;
-        $dns_dkim1 = (Resolve-DnsName -Type "CNAME" -Name "selector1._domainkey.${domain}" -ErrorAction SilentlyContinue).NameHost;
-        $dns_dkim2 = (Resolve-DnsName -Type "CNAME" -Name "selector2._domainkey.${domain}" -ErrorAction SilentlyContinue).NameHost;
-        $dns_auto = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "autodiscover.${domain}").NameHost;
-        $dns_txt = (Resolve-Dnsname -ErrorAction SilentlyContinue -Type "TXT" -Name $Domain).ForEach({$_[0].Strings}) | Out-String;
-        #$dns_dmarc = ();
-        }
-    if ($m365_teams) {
-        $dns_sfb1 = (Resolve-Dnsname -ErrorAction SilentlyContinue -Type "CNAME" -Name "lyncdiscover.${domain}").NameHost;
-        $dns_sfb2 = (Resolve-Dnsname -ErrorAction SilentlyContinue -Type "CNAME" -Name "sip.${domain}").NameHost;
-        $dns_sfbsrv1 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "SRV" -Name "_sip._tls.${domain}");
-        $dns_sfbsrv2 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "SRV" -Name "_sipfederationtls._tcp.${domain}");
-        }
-    if ($m365_mdm) {
-        $dns_mdm1 = (Resolve-Dnsname -ErrorAction SilentlyContinue -Type "CNAME" -Name "enterpriseregistration.${domain}").NameHost;
-        $dns_mdm2 = (Resolve-Dnsname -ErrorAction SilentlyContinue -Type "CNAME" -Name "enterpriseenrollment.${domain}").NameHost;
-        }
+    Clear-Host
+    Write-Host "==========================================" -ForegroundColor Cyan
+    Write-Host "       MICROSOFT 365 DNS DIAGNOSTICS      " -ForegroundColor Yellow
+    Write-Host "==========================================" -ForegroundColor Cyan
+
+    $domain = Read-Host -Prompt "`nEnter domain to audit (or press Enter to exit)"
+    if ([string]::IsNullOrWhiteSpace($domain)) {
+        Write-Host "Exiting DNS overview tool." -ForegroundColor Gray
+        break
     }
-Write-Host;
-Write-Host -Fore Green "DNS results";
-Write-Host -NoNewline -Fore Yellow "Autodiscover: "; Write-Host $dns_auto;
-Write-Host -NoNewline -Fore Yellow "DKIM 1: "; Write-Host $dns_dkim1;
-Write-Host -NoNewline -Fore Yellow "DKIM 2: "; Write-Host $dns_dkim2;
-Write-Host -NoNewline -Fore Yellow "MDM 1: "; Write-Host $dns_mdm1;
-Write-Host -NoNewline -Fore Yellow "MDM 2: "; Write-Host $dns_mdm2;
-Write-Host -NoNewline -Fore Yellow "SFB CNAME 1: "; Write-Host $dns_sfb1;
-Write-Host -NoNewline -Fore Yellow "SFB CNAME 2: "; Write-Host $dns_sfb2;
-Write-Host -NoNewline -Fore Yellow "SFB SRV 1: "; $dns_sfbsrv1.NameTarget + ":" + $dns_sfbsrv1.Port
-Write-Host -NoNewline -Fore Yellow "SFB SRV 2: "; $dns_sfbsrv2.NameTarget + ":" + $dns_sfbsrv2.Port
-Write-Host -Fore Green "TXT records: "; [string]$dns_txt;
-Write-Host -Fore Green "MX records: "; $dns_mx;
-Write-Host -Fore Red "===============";
-$doitagain = Read-Host -Prompt "Do you wish to lookup another domain? <y/n>";
-}
-while ($doitagain -like "y*")
+
+    Write-Host "`nResolving records for: $domain..." -ForegroundColor Cyan
+
+    # 1. Exchange Online Records (MX, Autodiscover, DKIM, TXT/SPF)
+    if ($CheckExo) {
+        $dns_mx    = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "MX" -Name $domain | Sort-Object Preference).ForEach({ "$($_.NameExchange) [Priority: $($_.Preference)]" }) -join "; "
+        $dns_auto  = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "autodiscover.$domain").NameHost
+        $dns_dkim1 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "selector1._domainkey.$domain").NameHost
+        $dns_dkim2 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "selector2._domainkey.$domain").NameHost
+        $dns_txt   = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "TXT" -Name $domain).ForEach({ $_.Strings -join " " }) -join "`n    "
+    }
+
+    # 2. Microsoft Teams / Skype for Business Records (CNAME & SRV)
+    if ($CheckTeams) {
+        $dns_sfb1    = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "lyncdiscover.$domain").NameHost
+        $dns_sfb2    = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "sip.$domain").NameHost
+        $dns_sfbsrv1 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "SRV" -Name "_sip._tls.$domain").ForEach({ "$($_.NameTarget):$($_.Port)" }) -join "; "
+        $dns_sfbsrv2 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "SRV" -Name "_sipfederationtls._tcp.$domain").ForEach({ "$($_.NameTarget):$($_.Port)" }) -join "; "
+    }
+
+    # 3. MDM Intune Device Enrollment Records (CNAME)
+    if ($CheckMdm) {
+        $dns_mdm1 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "enterpriseregistration.$domain").NameHost
+        $dns_mdm2 = (Resolve-DnsName -ErrorAction SilentlyContinue -Type "CNAME" -Name "enterpriseenrollment.$domain").NameHost
+    }
+
+    # Print results
+    Write-Host "`n--- Exchange Online & Mail Flow ---" -ForegroundColor Yellow
+    Write-Host "MX Records:     $dns_mx"
+    Write-Host "Autodiscover:   $dns_auto"
+    Write-Host "DKIM 1:         $dns_dkim1"
+    Write-Host "DKIM 2:         $dns_dkim2"
+    Write-Host "TXT / SPF:`n    $dns_txt"
+
+    Write-Host "`n--- Teams & Skype for Business ---" -ForegroundColor Yellow
+    Write-Host "LyncDiscover:   $dns_sfb1"
+    Write-Host "SIP CNAME:      $dns_sfb2"
+    Write-Host "SIP TLS SRV:    $dns_sfbsrv1"
+    Write-Host "Federation SRV: $dns_sfbsrv2"
+
+    Write-Host "`n--- Intune MDM Registration ---" -ForegroundColor Yellow
+    Write-Host "EnterpriseRegistration: $dns_mdm1"
+    Write-Host "EnterpriseEnrollment:   $dns_mdm2"
+
+    Write-Host "`n==========================================" -ForegroundColor Cyan
+    $repeat = Read-Host -Prompt "Audit another domain? (y/n)"
+} while ($repeat -like "y*")

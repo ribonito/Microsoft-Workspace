@@ -1,91 +1,101 @@
 <#
 .SYNOPSIS
-Office Message Encryption Management
-https://github.com/O365scripts/O365scripts/blob/master/Exchange%20Online/EXO%20-%20Office%20Message%20Encryption.ps1
+    Manages and configures Office 365 Message Encryption (OME) and Azure Information Protection (AIP/IRM).
+
+.DESCRIPTION
+    Validates, configures, and enables Office 365 Message Encryption (OME) and Information Rights
+    Management (IRM) in Exchange Online. Tests connectivity to AIPService, verifies RMS templates,
+    sets licensing distribution endpoints, enables simplified OWA client access (Protect button,
+    Encrypt Only, Do Not Forward), and executes diagnostics via Test-IRMConfiguration.
+
 .NOTES
-	> 
+    Requires the AIPService and ExchangeOnlineManagement PowerShell modules.
+    Modern authentication with MFA is supported.
+    Ensure $AdminUpn is defined prior to execution.
+
 .LINK
-Reference:
-https://docs.microsoft.com/en-us/microsoft-365/compliance/ome-faq?view=o365-worldwide
-https://docs.microsoft.com/en-us/powershell/module/exchange/set-irmconfiguration?view=exchange-ps
-https://docs.microsoft.com/en-us/powershell/module/exchange/get-irmconfiguration?view=exchange-ps
-https://docs.microsoft.com/en-us/azure/information-protection/install-powershell
-https://docs.microsoft.com/en-us/powershell/module/aipservice/enable-aipservice?view=azureipps
-https://docs.microsoft.com/en-us/powershell/module/aipservice/get-aipservice?view=azureipps
-https://docs.microsoft.com/en-us/microsoft-365/compliance/set-up-azure-rms-for-previous-version-message-encryption?view=o365-worldwide
+    https://learn.microsoft.com/microsoft-365/compliance/ome-faq
+    https://learn.microsoft.com/powershell/module/exchange/set-irmconfiguration
+    https://learn.microsoft.com/powershell/module/exchange/get-irmconfiguration
+    https://learn.microsoft.com/powershell/module/aipservice/enable-aipservice
 #>
 
-<# Connect to EXO and AIP. #>
-#Install-Module AIPService -AllowClobber -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-Import-Module AIPService;
-Import-Module ExchangeOnlineManagement;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
-Connect-AIPService;
+# Step 1: Import required modules and authenticate
+Import-Module AIPService -ErrorAction SilentlyContinue
+Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
 
-<# Connect to EXO and AIP without MFA. #>
-#$Creds = Get-Credential -UserName $AdminUpn -Message "Login:";
-#Connect-AIPService -Credential $Creds;
-#Connect-ExchangeOnline -UserPrincipalName $AdminUpn -Credential $Creds;
-
-<# Confirm which modules are installed? #>
-Get-Module AADRM -ListAvailable | Select Name,Version;
-Get-Module AIPService -ListAvailable | Select Name,Version;
-Get-Module ExchangeOnlineManagement -ListAvailable | Select Name,Version;
-
-<# Remove previous AIP module? #>
-#Uninstall-Module AADRM -AllVersions -Force -Confirm:$false;
-
-<# Get AIP status and AIP/IRM configuration. #>
-$AipService = Get-AipService;
-$AipConfig = Get-AipServiceConfiguration;
-$IrmConfig = Get-IRMConfiguration;
-
-<# Display current configuration. #>
-Clear;
-Write-Host -NoNewLine -Fore Yellow "AIP Service: ";
-	if ($AipService -eq "Disabled") {Write-Host -Fore Red $AipService;}
-	elseif ($AipService -eq "Enabled") {Write-Host -Fore Green $AipService;}
-Write-Host -Fore Yellow "AIP Configuration: "; $AipConfig;
-Write-Host -Fore Yellow "IRM Configuration: "; $IrmConfig;
-
-<# Enable AIP if disabled. #>
-if ($AipService -eq "Disabled"){
-	Write-Host -Fore Yellow "Attempting to enable AIP.";
-	Enable-AipService
+$AdminUpn = ""
+if ([string]::IsNullOrWhiteSpace($AdminUpn)) {
+    Connect-ExchangeOnline
+    Connect-AipService
+} else {
+    Connect-ExchangeOnline -UserPrincipalName $AdminUpn
+    Connect-AipService
 }
 
+# Step 2: Validate installed module versions
+Get-Module AIPService, ExchangeOnlineManagement -ListAvailable |
+    Select-Object Name, Version, Path |
+    Format-Table -AutoSize
 
-<# If licensing location is empty or does not contain the licensing url taken from the aip service side, add it. #>
-$LicenseUrl = ;
+# Step 3: Retrieve current AIP and IRM configurations
+$AipService = Get-AipService
+$AipConfig  = Get-AipServiceConfiguration
+$IrmConfig  = Get-IRMConfiguration
 
-$List = $IrmConfig.LicensingLocation;
-if (!$List) {Write-Host "Licensing list currently empty."; $List = @()}
-if (!$List.Contains($AipConfig.LicensingIntranetDistributionPointUrl)) {
-	Write-Host "Adding Licensing Distribution Point URL since it is missing from the list.";
-	$List += $AipConfig.LicensingIntranetDistributionPointUrl;
+Write-Host "=== Current Status ===" -ForegroundColor Cyan
+Write-Host "AIP Service Status: " -NoNewline
+if ($AipService -eq "Disabled") {
+    Write-Host "Disabled" -ForegroundColor Red
+} else {
+    Write-Host "Enabled" -ForegroundColor Green
 }
-Write-Host -Fore Yellow "Setting IRM licensing location list.";
-Set-IRMConfiguration -LicensingLocation $List;
 
-Write-Host -Fore Yellow "Enabling Office 365 Message Encryption Azure RMS and Internal Licensing.";
-Set-IRMConfiguration -AzureRMSLicensingEnabled $true -InternalLicensingEnabled $true;
+Write-Host "`nAIP Configuration:" -ForegroundColor Yellow
+$AipConfig | Format-List LicensingIntranetDistributionPointUrl, LicensingExtranetDistributionPointUrl
 
-<# Enable the Protect button, Encrypt Only and Do Not Forward in OWA #>
-Set-IRMConfiguration -SimplifiedClientAccessEnabled $true -SimplifiedClientAccessEncryptOnlyDisabled $false -SimplifiedClientAccessDoNotForwardDisabled $false -EnablePdfEncryption $true;
+Write-Host "IRM Configuration:" -ForegroundColor Yellow
+$IrmConfig | Format-List AzureRMSLicensingEnabled, InternalLicensingEnabled, SimplifiedClientAccessEnabled, LicensingLocation
 
+# Step 4: Enable AIP service if currently disabled
+if ($AipService -eq "Disabled") {
+    Write-Host "AIP Service is disabled. Enabling AIP Service..." -ForegroundColor Yellow
+    Enable-AipService
+}
 
-Set-IRMConfiguration -SearchEnabled $true;
+# Step 5: Configure IRM Licensing Location
+$LicenseUrl = $AipConfig.LicensingIntranetDistributionPointUrl
+$List = [System.Collections.Generic.List[string]]::new()
+if ($IrmConfig.LicensingLocation) {
+    foreach ($loc in $IrmConfig.LicensingLocation) {
+        $List.Add($loc)
+    }
+}
 
-<# Confirm? #>
+if ($LicenseUrl -and -not $List.Contains($LicenseUrl)) {
+    Write-Host "Adding Licensing Distribution Point URL ($LicenseUrl) to IRM LicensingLocation..." -ForegroundColor Yellow
+    $List.Add($LicenseUrl)
+    Set-IRMConfiguration -LicensingLocation $List
+}
 
-Get-IRMConfiguration;
-Get-RMSTemplate;
-Test-IRMConfiguration -Sender $AdminUpn;
+# Step 6: Enable Azure RMS and Internal Licensing
+Write-Host "Enabling Azure RMS licensing and internal licensing in IRM..." -ForegroundColor Yellow
+Set-IRMConfiguration -AzureRMSLicensingEnabled $true -InternalLicensingEnabled $true
 
+# Step 7: Configure OWA simplified client access (Protect button, Encrypt-Only, Do Not Forward)
+Write-Host "Configuring OWA simplified client access and PDF encryption..." -ForegroundColor Yellow
+Set-IRMConfiguration -SimplifiedClientAccessEnabled $true `
+                     -SimplifiedClientAccessEncryptOnlyDisabled $false `
+                     -SimplifiedClientAccessDoNotForwardDisabled $false `
+                     -EnablePdfEncryption $true `
+                     -SearchEnabled $true
 
-<# Optional: Disable OME Clear OME v1 TPDs +v2? #>
-Write-Host -Fore Yellow "Disabling OME v1 and v2 and re-enabling OME v2 only.";
-Set-IRMConfiguration -AzureRMSLicensingEnabled $false -InternalLicensingEnabled $false -RMSOnlineKeySharingLocation $null -Force -Confirm:$false;
-Set-IRMConfiguration -AzureRMSLicensingEnabled $true -InternalLicensingEnabled $true;
+# Step 8: Validate configuration and test IRM with sample sender
+Write-Host "`n=== Final Validation ===" -ForegroundColor Cyan
+Get-IRMConfiguration | Format-List AzureRMSLicensingEnabled, InternalLicensingEnabled, SimplifiedClientAccessEnabled
+Get-RMSTemplate | Format-Table Name, Id, Type -AutoSize
+
+if (-not [string]::IsNullOrWhiteSpace($AdminUpn)) {
+    Write-Host "Running IRM configuration test for sender $AdminUpn..." -ForegroundColor Cyan
+    Test-IRMConfiguration -Sender $AdminUpn
+}

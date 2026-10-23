@@ -1,89 +1,127 @@
 <#
 .SYNOPSIS
-Get M365 Module Overview
-https://github.com/O365scripts/O365scripts/blob/master/Tools/Get-M365ModuleOverview.ps1
-.NOTES
-.LINK
-Reference:
-https://docs.microsoft.com/en-us/office365/enterprise/powershell/connect-to-all-office-365-services-in-a-single-windows-powershell-window
-https://docs.microsoft.com/en-us/office365/enterprise/powershell/connect-to-office-365-powershell
+    Inventories and verifies installation of Microsoft 365 administrative PowerShell modules.
+
+.DESCRIPTION
+    Audits the local system for the presence and installed versions of critical Microsoft 365
+    PowerShell modules, including ExchangeOnlineManagement, MicrosoftTeams, Microsoft.Graph,
+    AzureAD, PnP.PowerShell, and SharePoint Online. Produces a structured report with an optional CSV export.
+
+.PARAMETER ExportReport
+    Switch to export the module overview report to a CSV file.
+
+.PARAMETER ExportReportPath
+    Destination directory where the CSV report will be written. Defaults to the user's Downloads folder.
+
+.PARAMETER Silent
+    Suppresses console visual output and only returns the resulting collection.
+
 .EXAMPLE
-Get-M365ModuleOverview -Silent;
-Get-M365ModuleOverview | Select Module -Unique | Where {$_.Version -ne "n/a"} | % {Install-Module $_.Module -AllowClobber -Force -Confirm:$false -Scope CurrentUser -WhatIf};
+    Get-M365ModuleOverview
+    Checks all standard M365 modules and prints status directly to the console.
+
+.EXAMPLE
+    Get-M365ModuleOverview -ExportReport -ExportReportPath "$env:USERPROFILE\Desktop"
+    Inventories installed modules and saves the result to a CSV file on the desktop.
+
+.OUTPUTS
+    [PSCustomObject]
+    Objects containing Module name, Version, and Installation status.
+
+.NOTES
+    Author: Josep Canas - M365 Solutions Architect
+    Product: Microsoft 365 Administrative Tools
+    Version: 2.0
+
+.LINK
+    https://learn.microsoft.com/microsoft-365/enterprise/connect-to-all-office-365-services-in-a-single-windows-powershell-window
+    https://learn.microsoft.com/powershell/gallery/overview
 #>
 function Get-M365ModuleOverview {
-	[CmdletBinding()] Param (
-		[switch]$ExportReport,
-		[string]$ExportReportPath = "$env:USERPROFILE\Downloads",
-		[switch]$Silent
-	)
-Begin {
-if (!$Silent) {Write-Host -Fore Red "M365 PS MODULE OVERVIEW";}
-$ListAllModules = "AADRM", 
-	"AIPService", 
-	"AzureAD",
-	"AzureADPreview",
-	"ExchangeOnlineManagement",
-	"Microsoft.Online.SharePoint.PowerShell",
-	"MicrosoftTeams",
-	"MSGraph",
-	"MSOnline",
-	"MSCommerce",
-	"NetworkTestingCompanion",
-	"O365CentralizedAddInDeployment",
-	"O365Troubleshooters",
-	"PnP.PowerShell",
-	#"SharePointPnPPowerShell2019","SharePointPnPPowerShell2016","SharePointPnPPowerShell2013",
-	"SharePointPnPPowerShellOnline"
-	;
-$Report = [System.Collections.Generic.List[Object]]::new()
-}
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory = $false)]
+        [switch]$ExportReport,
 
-Process {
-foreach ($m in ($ListAllModules | Sort)) {
-	if (!$Silent) {Write-Host -NoNewline "Searching if the "; Write-Host -NoNewline -Fore Yellow $m; Write-Host -NoNewline " module is installed: ";}
-	$GetModule = Get-Module -ListAvailable -Name $m -ErrorAction SilentlyContinue;
-	# Module not found.
-	if ($null -eq $GetModule) {
-		if (!$Silent) {Write-Host -Fore Red "NO";}
-		#if ($ExportReport) {
-			$ReportLine = [PSCustomObject]@{Module = $m; Version = "n/a"}
-			$Report.Add($ReportLine);	
-		#}
-	}
-	# Module found.
-	else {
-		if (!$Silent) {
-			Write-Host -NoNewLine -Fore Green "YES";
-			Write-Host -NoNewline " (";
-		}
-		# More than one version of module present.
-		if (($GetModule).Count -gt 1) {
-			if (!$Silent) {Write-Host -NoNewLine -Fore Yellow (($GetModule | Select -ExpandProperty Version) -join " ");}
-			#if ($ExportReport) {
-				# Building report lines for each version.
-				foreach ($v in $GetModule) {
-					$ReportLine = [PSCustomObject]@{Module = [string]$v.Name; Version = [string]$v.Version};
-					$Report.Add($ReportLine);
-					}
-			#	}
-			}
-		else {
-			if (!$Silent) {Write-Host -NoNewline -Fore Yellow $GetModule.Version;}
-			# Build report line for version.
-			#if ($ExportReport) {
-				$Report.Add([PSCustomObject]@{Module = $GetModule.Name; Version = $GetModule.Version});
-				#$ReportLine = [PSCustomObject]@{Module = $GetModule.Name; Version = $GetModule.Version}7#É
-				#$Report.Add($ReportLine);
-			#	}
-			}
-		if (!$Silent) {Write-Host ")";}
-		}
-	}
-if ($ExportReport) {
-	$Report | Export-Csv -Path "$ExportReportPath\M365ModuleOverview_$(Get-Date -Format "yyyyMMddhhmmss").csv" -NoTypeInformation -Encoding utf8 -Verbose;
-	}
-}
+        [Parameter(Mandatory = $false)]
+        [string]$ExportReportPath = "$env:USERPROFILE\Downloads",
 
-End {Return $Report;}
+        [Parameter(Mandatory = $false)]
+        [switch]$Silent
+    )
+
+    begin {
+        if (-not $Silent) {
+            Write-Host "`n=== Microsoft 365 PowerShell Module Inventory ===" -ForegroundColor Cyan
+        }
+
+        $ListAllModules = @(
+            "AIPService",
+            "AzureAD",
+            "AzureADPreview",
+            "ExchangeOnlineManagement",
+            "Microsoft.Graph",
+            "Microsoft.Online.SharePoint.PowerShell",
+            "MicrosoftTeams",
+            "MSCommerce",
+            "MSOnline",
+            "NetworkTestingCompanion",
+            "PnP.PowerShell"
+        )
+        $Report = [System.Collections.Generic.List[PSCustomObject]]::new()
+    }
+
+    process {
+        foreach ($m in ($ListAllModules | Sort-Object)) {
+            if (-not $Silent) {
+                Write-Host "Checking module " -NoNewline
+                Write-Host $m -NoNewline -ForegroundColor Yellow
+                Write-Host "... " -NoNewline
+            }
+
+            $GetModule = Get-Module -ListAvailable -Name $m -ErrorAction SilentlyContinue
+
+            if ($null -eq $GetModule) {
+                if (-not $Silent) {
+                    Write-Host "NOT INSTALLED" -ForegroundColor Red
+                }
+                $Report.Add([PSCustomObject]@{
+                    Module    = $m
+                    Installed = $false
+                    Version   = "n/a"
+                    Path      = "n/a"
+                })
+            }
+            else {
+                $versions = ($GetModule | ForEach-Object { $_.Version.ToString() }) -join ", "
+                $paths = ($GetModule | ForEach-Object { $_.ModuleBase }) -join "; "
+
+                if (-not $Silent) {
+                    Write-Host "INSTALLED " -NoNewline -ForegroundColor Green
+                    Write-Host "($versions)" -ForegroundColor Gray
+                }
+
+                $Report.Add([PSCustomObject]@{
+                    Module    = $m
+                    Installed = $true
+                    Version   = $versions
+                    Path      = $paths
+                })
+            }
+        }
+    }
+
+    end {
+        if ($ExportReport) {
+            if (-not (Test-Path -Path $ExportReportPath)) {
+                New-Item -ItemType Directory -Path $ExportReportPath -Force | Out-Null
+            }
+            $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            $CsvFile = Join-Path -Path $ExportReportPath -ChildPath "M365ModuleOverview_$Timestamp.csv"
+            $Report | Export-Csv -Path $CsvFile -NoTypeInformation -Encoding utf8
+            Write-Host "Report exported: $CsvFile" -ForegroundColor Green
+        }
+        return $Report
+    }
 }

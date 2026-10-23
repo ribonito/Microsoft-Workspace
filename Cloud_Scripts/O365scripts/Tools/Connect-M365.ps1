@@ -1,115 +1,145 @@
 <#
 .SYNOPSIS
-Quick connection to M365 PowerShell.
-https://github.com/O365scripts/O365scripts/blob/master/Tools/Connect-M365.ps1
+    Quick connection utility for Microsoft 365 PowerShell management modules.
+
+.DESCRIPTION
+    Establishes administrative sessions to multiple Microsoft 365 cloud workloads,
+    including Entra ID / MSOnline, Exchange Online, Security & Compliance, Microsoft Teams,
+    SharePoint Online, and PnP PowerShell. Supports both interactive modern authentication
+    (MFA enabled) and legacy credential-based authentication.
+
 .NOTES
-This script does not validate the presence of any of the modules before connecting and assume they are already installed.
-If you do need to install some of the modules you can refer to the following script: <link>
-Uncomment and adjust the connection options with your admin and tenant details before running.
-Adjust the connection options and the modules needed prior to running.
+    Assumes required PowerShell modules are installed on the local system.
+    Adjust connection flags ($ConnectToMSOL, $ConnectToEXO, etc.) and $AdminUpn before execution.
+    Note: Do not connect to both EXO v2 and Security & Compliance concurrently in the same session.
+
+.EXAMPLE
+    .\Connect-M365.ps1
+    Executes connection routine with selected services enabled.
+
 .LINK
+    https://learn.microsoft.com/microsoft-365/enterprise/connect-to-all-office-365-services-in-a-single-windows-powershell-window
+    https://learn.microsoft.com/powershell/exchange/connect-to-exchange-online-powershell
+    https://learn.microsoft.com/powershell/module/teams/connect-microsoftteams
 #>
 
-<# Connection options. #>
-$AdminUpn = "";
-$Tenant = "";
-$AdminIsMfaEnabled = $false;
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [string]$AdminUpn = "",
 
-<# Get admin credentials if account is not MFA enabled. #>
-if (!$AdminIsMfaEnabled) {$Creds = Get-Credential -Message "Login" -UserName $AdminUpn}
+    [Parameter(Mandatory = $false)]
+    [string]$Tenant = "",
 
-<# Which modules to connect? #>
-$ConnectToMSOL	= 0;
-$ConnectToAAD	= 0;
-$ConnectToAz	= 0;
-$ConnectToEXO	= 0; $ConnectToSCC = 0;
-#$ConnectToSFBO	= 0;
-$ConnectToTeams	= 0;
-$ConnectToSPO	= 0;
-$ConnectToPNP	= 0;
+    [Parameter(Mandatory = $false)]
+    [bool]$AdminIsMfaEnabled = $true
+)
 
-<# Specify which site url to use if you want to auto connect to PNP. #>
-if ($ConnectToPNP) {
-	$PnpSiteUrl = "https://${Tenant}.sharepoint.com/sites/NameOfSite";
-	#$PnpSiteUrl = "https://${Tenant}-admin.sharepoint.com";
-	#$PnpSiteUrl = "https://${Tenant}-my.sharepoint.com/personal/jdoe_contoso_com";
-	#$PnpSiteUrl = "https://${Tenant}-admin.sharepoint.com";
+# Prompt for credentials if not using MFA interactive login
+$Creds = $null
+if (-not $AdminIsMfaEnabled -and -not [string]::IsNullOrWhiteSpace($AdminUpn)) {
+    $Creds = Get-Credential -Message "Enter credentials for $AdminUpn" -UserName $AdminUpn
 }
 
-<# MSOL #>
+# -----------------------------------------------------------------------------
+# Module Selection Flags (Set to 1 to connect, 0 to skip)
+# -----------------------------------------------------------------------------
+$ConnectToMSOL  = 0
+$ConnectToAAD   = 0
+$ConnectToAz    = 0
+$ConnectToEXO   = 1
+$ConnectToSCC   = 0
+$ConnectToTeams = 0
+$ConnectToSPO   = 0
+$ConnectToPNP   = 0
+
+# PnP Site URL configuration
+$PnpSiteUrl = if (-not [string]::IsNullOrWhiteSpace($Tenant)) { "https://${Tenant}-admin.sharepoint.com" } else { $null }
+
+# 1. MSOnline (Legacy Azure AD v1)
 if ($ConnectToMSOL) {
-	Import-Module MSOnline;
-	if (!$AdminIsMfaEnabled) {Connect-MsolService -Credential $Creds}
-	else {Connect-MsolService};
+    Write-Host "Connecting to MSOnline..." -ForegroundColor Cyan
+    Import-Module MSOnline -ErrorAction SilentlyContinue
+    if (-not $AdminIsMfaEnabled -and $Creds) { Connect-MsolService -Credential $Creds } else { Connect-MsolService }
 }
-<# AzureAD #>
+
+# 2. AzureAD (Entra ID v2)
 if ($ConnectToAAD) {
-	Import-Module AzureAD;
-	if (!$AdminIsMfaEnabled) {Connect-AzureAD -AccountId $AdminUpn -Credential $Creds}
-	else {Connect-AzureAD -AccountId $AdminUpn}
+    Write-Host "Connecting to AzureAD..." -ForegroundColor Cyan
+    Import-Module AzureAD -ErrorAction SilentlyContinue
+    if (-not $AdminIsMfaEnabled -and $Creds) { Connect-AzureAD -AccountId $AdminUpn -Credential $Creds } else { Connect-AzureAD -AccountId $AdminUpn }
 }
-<# Az (aka AzureRM v2) #>
+
+# 3. Azure Az Module
 if ($ConnectToAz) {
-	Import-Module Az;
-	if (!$AdminIsMfaEnabled) {Connect-AzAccount -Credential $Creds}
-	else {Connect-AzAccount}
+    Write-Host "Connecting to Azure Az..." -ForegroundColor Cyan
+    Import-Module Az -ErrorAction SilentlyContinue
+    if (-not $AdminIsMfaEnabled -and $Creds) { Connect-AzAccount -Credential $Creds } else { Connect-AzAccount }
 }
 
-<# Check if EXO and SCC are both enabled. #>
+# 4. Exchange Online vs Security & Compliance conflict warning
 if ($ConnectToEXO -and $ConnectToSCC) {
-	Write-Host -NoNewline -Fore Red "Warning: ";
-	Write-Host -Fore Yellow "Both the Exchange Online and Security & Compliance connection options were enabled but only one of these services can be connected at the same. Connecting to EXO instead.";
-	$ConnectToSCC = 0;
-}
-<# Exchange Online v2 #>
-if ($ConnectToEXO) {
-	Import-Module ExchangeOnlineManagement;
-	if (!$AdminIsMfaEnabled) {Connect-ExchangeOnline -UserPrincipalName $AdminUpn -Credential $Creds}
-	else {Connect-ExchangeOnline -UserPrincipalName $AdminUpn}
-}
-<# Security & Compliance via EXO v2 module. #>
-if ($ConnectToSCC) {
-	Import-Module ExchangeOnlineManagement;
-	if (!$AdminIsMfaEnabled) {Connect-IPPSSession -UserPrincipalName $AdminUpn -Credential $Creds}
-	else {Connect-IPPSSession -UserPrincipalName $AdminUpn}
-}
-<# [DEPRECATED] Skype for Business Online via specific Teams module version. #>
-<#
-if ($ConnectToSFBO) {
-	Import-Module MicrosoftTeams -RequiredVersion 1.1.6;
-	if (!$AdminIsMfaEnabled) {$Session_Sfb = New-CsOnlineSession -Credential $Creds -OverrideAdminDomain "${Tenant}.onmicrosoft.com"}
-	else {$Session_Sfb = New-CsOnlineSession -OverrideAdminDomain "${Tenant}.onmicrosoft.com"}
-	Import-PSSession $Session_Sfb;
-} #>
-<# Teams #>
-if ($ConnectToTeams) {
-	Import-Module MicrosoftTeams;
-	Connect-MicrosoftTeams;
-}
-<# SPO #>
-if ($ConnectToSPO) {
-	Import-Module Microsoft.Online.SharePoint.PowerShell;
-	if (!$AdminIsMfaEnabled) {Connect-SPOService -Url "https://${Tenant}-admin.sharepoint.com" -Credential $Creds}
-	else {Connect-SPOService -Url "https://${Tenant}-admin.sharepoint.com"}
-}
-<# SharePoint PnP #>
-if ($ConnectToPNP) {
-	if ($PnpSiteUrl) {
-		Import-Module PnP.PowerShell;
-		if (!$AdminIsMfaEnabled) {Connect-PnPOnline -Url $PnpSiteUrl -Credential $Creds}
-		else {Connect-PnPOnline -Url $PnpSiteUrl -UseWebLogin}	
-	}
-	else {
-		Write-Host -NoNewline -Fore Red "Warning: ";
-		Write-Host -Fore Yellow "The `$PnpSiteUrl value was not specified so no connection to PNP will be attempted.";
-	}
+    Write-Warning "Exchange Online and Security & Compliance sessions may conflict in the same runspace."
 }
 
-<# X #>
-<#
-if ($ConnectToX) {
-	Import-Module X;
-	if (!$AdminIsMfaEnabled) {Connect-X -Credential $Creds}
-	else {Connect-X}
+# 5. Exchange Online
+if ($ConnectToEXO) {
+    Write-Host "Connecting to Exchange Online..." -ForegroundColor Cyan
+    Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+    if (-not [string]::IsNullOrWhiteSpace($AdminUpn)) {
+        Connect-ExchangeOnline -UserPrincipalName $AdminUpn -ShowBanner:$false
+    } else {
+        Connect-ExchangeOnline -ShowBanner:$false
+    }
 }
-#>
+
+# 6. Security & Compliance
+if ($ConnectToSCC) {
+    Write-Host "Connecting to Security & Compliance Center..." -ForegroundColor Cyan
+    Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
+    if (-not [string]::IsNullOrWhiteSpace($AdminUpn)) {
+        Connect-IPPSSession -UserPrincipalName $AdminUpn -ShowBanner:$false
+    } else {
+        Connect-IPPSSession -ShowBanner:$false
+    }
+}
+
+# 7. Microsoft Teams
+if ($ConnectToTeams) {
+    Write-Host "Connecting to Microsoft Teams..." -ForegroundColor Cyan
+    Import-Module MicrosoftTeams -ErrorAction SilentlyContinue
+    if (-not [string]::IsNullOrWhiteSpace($AdminUpn)) {
+        Connect-MicrosoftTeams -AccountId $AdminUpn
+    } else {
+        Connect-MicrosoftTeams
+    }
+}
+
+# 8. SharePoint Online
+if ($ConnectToSPO) {
+    if ([string]::IsNullOrWhiteSpace($Tenant)) {
+        Write-Warning "Tenant prefix must be provided to connect to SharePoint Online Admin Center."
+    } else {
+        Write-Host "Connecting to SharePoint Online Admin Center..." -ForegroundColor Cyan
+        Import-Module Microsoft.Online.SharePoint.PowerShell -ErrorAction SilentlyContinue
+        $SpoAdminUrl = "https://${Tenant}-admin.sharepoint.com"
+        if (-not $AdminIsMfaEnabled -and $Creds) {
+            Connect-SPOService -Url $SpoAdminUrl -Credential $Creds
+        } else {
+            Connect-SPOService -Url $SpoAdminUrl
+        }
+    }
+}
+
+# 9. PnP PowerShell
+if ($ConnectToPNP) {
+    if ([string]::IsNullOrWhiteSpace($PnpSiteUrl)) {
+        Write-Warning "PnP site URL must be specified to connect via PnP PowerShell."
+    } else {
+        Write-Host "Connecting to PnP PowerShell at $PnpSiteUrl..." -ForegroundColor Cyan
+        Import-Module PnP.PowerShell -ErrorAction SilentlyContinue
+        Connect-PnPOnline -Url $PnpSiteUrl -Interactive
+    }
+}
+
+Write-Host "PowerShell connection sequence completed." -ForegroundColor Green

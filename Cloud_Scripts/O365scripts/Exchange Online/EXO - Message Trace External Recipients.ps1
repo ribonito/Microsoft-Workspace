@@ -1,39 +1,68 @@
 <#
 .SYNOPSIS
-Search in message trace for all unique external recipient addresses.
-https://github.com/O365scripts/O365scripts/blob/master/Exchange%20Online/EXO%20-%20Message%20Trace%20External%20Recipients.ps1
+    Searches message trace logs for unique external recipient addresses in Exchange Online.
+
+.DESCRIPTION
+    Connects to Exchange Online and audits message trace events over the last 30 days.
+    Filters out messages sent to internal accepted domains (including *.onmicrosoft.com),
+    identifies all unique external recipient email addresses, and exports the findings to CSV.
+
 .NOTES
-	> To do? Automated enumeration of possible verified domains via Get-MsolDomain/AzureADDomain.
+    Requires the ExchangeOnlineManagement module (v2 or v3).
+    Update $AdminUpn, $Domain, and $DomainOnms with your organization's domain values.
+
 .LINK
-https://docs.microsoft.com/en-us/powershell/module/exchange/mail-flow/get-messagetrace?view=exchange-ps
+    https://learn.microsoft.com/powershell/module/exchange/get-messagetrace
 #>
 
-<# Connect to EXO v2. #>
-#Set-ExecutionPolicy RemoteSigned -Force -Confirm:$false;
-#Install-Module ExchangeOnlineManagement -AllowClobber -Force -Confirm:$false;
-$AdminUpn = "";
-Connect-ExchangeOnline -UserPrincipalName $AdminUpn;
+# Connect to Exchange Online
+$AdminUpn = ""
+if ([string]::IsNullOrWhiteSpace($AdminUpn)) {
+    Connect-ExchangeOnline
+} else {
+    Connect-ExchangeOnline -UserPrincipalName $AdminUpn
+}
 
-<# Export list of unique external addresses sent out via the onMS or by the custom domain to CSV. #>
-$Domain = "domain.com";
-$DomainOnms = "tenant.onmicrosoft.com";
-$PathCsv = "$env:USERPROFILE\Desktop\ExportMsgTraceUniqueExternalAddresses_$((Get-Date -Format "yyyyMMddHHmmss")).csv";
-Get-MessageTrace -StartDate (Get-Date).Adddays(-30) -EndDate (Get-Date) | `
-	Where {$_.RecipientAddress -notlike "*$Domain" -and $_.RecipientAddress -notlike "*$DomainOnms"} | `
-	Group-Object -Property RecipientAddress | Select Name | `
-	Export-Csv -NoTypeInformation -Path $PathCsv;
+# -----------------------------------------------------------------------------
+# Scenario 1: Filter external recipients with a single primary domain
+# -----------------------------------------------------------------------------
+$Domain = "domain.com"
+$DomainOnms = "tenant.onmicrosoft.com"
+$PathCsvSingle = "$env:USERPROFILE\Desktop\ExportMsgTraceUniqueExternalAddresses_$((Get-Date -Format 'yyyyMMddHHmmss')).csv"
 
+Write-Host "Querying message trace for single primary domain filter..." -ForegroundColor Cyan
+Get-MessageTrace -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) |
+    Where-Object {
+        $_.RecipientAddress -notlike "*$Domain" -and
+        $_.RecipientAddress -notlike "*$DomainOnms"
+    } |
+    Group-Object -Property RecipientAddress |
+    Select-Object @{Name = "ExternalRecipient"; Expression = { $_.Name }}, Count |
+    Export-Csv -NoTypeInformation -Path $PathCsvSingle -Encoding utf8
 
-<# Export list of unique external addresses sent out via the onMS or by multiple custom domains to CSV. #>
-$Domain = "domain.com";
-$Domain2 = "domain2.com";
-$Domain3 = "domain3.com";
-$DomainOnms = "tenant.onmicrosoft.com";
-$PathCsv = "$env:USERPROFILE\Downloads\ExportMsgTraceUniqueExternalAddresses_$((Get-Date -Format "yyyyMMddHHmmss")).csv";
-Get-MessageTrace -StartDate (Get-Date).Adddays(-30) -EndDate (Get-Date) | `
-	Where {$_.RecipientAddress -notlike "*$Domain" -and `
-		$_.RecipientAddress -notlike "*$Domain2"} -and `
-		$_.RecipientAddress -notlike "*$Domain3"} -and `
-		$_.RecipientAddress -notlike "*$DomainOnms"} | `
-	Group-Object -Property RecipientAddress | Select Name | `
-	Export-Csv -NoTypeInformation -Path $PathCsv;
+Write-Host "Report exported to: $PathCsvSingle" -ForegroundColor Green
+
+# -----------------------------------------------------------------------------
+# Scenario 2: Filter external recipients across multiple internal domains
+# -----------------------------------------------------------------------------
+$InternalDomains = @("domain.com", "domain2.com", "domain3.com", "tenant.onmicrosoft.com")
+$PathCsvMulti = "$env:USERPROFILE\Downloads\ExportMsgTraceUniqueExternalAddresses_MultiDomain_$((Get-Date -Format 'yyyyMMddHHmmss')).csv"
+
+Write-Host "Querying message trace with multi-domain exclusion list..." -ForegroundColor Cyan
+Get-MessageTrace -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) |
+    Where-Object {
+        $recipient = $_.RecipientAddress
+        $isInternal = $false
+        foreach ($d in $InternalDomains) {
+            if ($recipient -like "*@$d" -or $recipient -like "*$d") {
+                $isInternal = $true
+                break
+            }
+        }
+        -not $isInternal
+    } |
+    Group-Object -Property RecipientAddress |
+    Select-Object @{Name = "ExternalRecipient"; Expression = { $_.Name }}, Count |
+    Export-Csv -NoTypeInformation -Path $PathCsvMulti -Encoding utf8
+
+Write-Host "Multi-domain report exported to: $PathCsvMulti" -ForegroundColor Green
